@@ -7,18 +7,18 @@ import java.time.LocalDate;
 
 public class OlderThanValidator implements ConstraintValidator<OlderThen, LocalDate> {
     private LocalDate thresholdDate;
-    private boolean NotNull;
+    private boolean isValidIfNull;
 
     @Override
     public void initialize(OlderThen constraintAnnotation) {
         this.thresholdDate = LocalDate.parse(constraintAnnotation.value());
-        this.NotNull = constraintAnnotation.NotNull();
+        this.isValidIfNull = !constraintAnnotation.NotNull();
     }
 
     @Override
     public boolean isValid(LocalDate value, ConstraintValidatorContext context) {
         if (value == null) {
-            return !NotNull;
+            return isValidIfNull;
         }
 
         return !value.isBefore(thresholdDate);
