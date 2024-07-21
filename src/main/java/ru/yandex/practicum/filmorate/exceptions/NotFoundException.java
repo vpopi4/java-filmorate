@@ -20,7 +20,7 @@ public class NotFoundException extends NoSuchElementException {
         super(s);
     }
 
-    HttpStatus getStatus() {
+    public HttpStatus getStatus() {
         return HttpStatus.NOT_FOUND;
     }
 }

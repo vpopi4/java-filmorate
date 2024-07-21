@@ -16,7 +16,11 @@ import java.util.List;
 @RequestMapping("/films")
 public class FilmController {
     private int seq;
-    private HashMap<Integer, Film> films;
+    private final HashMap<Integer, Film> films;
+
+    public FilmController() {
+        films = new HashMap<>();
+    }
 
     @GetMapping
     public List<Film> getAll() {
