@@ -14,17 +14,17 @@ import java.time.LocalDate;
 @Value
 @Builder
 public class FilmDTO {
-    @NotBlank(message = "name is mandatory field")
+    @NotBlank
     String name;
 
-    @Size(max = 200, message = "description length should be less or equal then 200")
+    @Size(max = 200)
     String description;
 
-    @NotNull(message = "releaseDate is mandatory field")
-    @OlderThen(value = "1895-12-28", message = "releaseDate must be older then 1895-12-28")
+    @NotNull
+    @OlderThen(value = "1895-12-28", message = "must be older then 1895-12-28")
     LocalDate releaseDate;
 
-    @NotNull(message = "duration is mandatory")
+    @NotNull
     @Positive
     Integer durationInMilliseconds;
 

@@ -16,12 +16,12 @@ public class FilmPatchDTO {
     @NotBlankIfNotNull(message = "name must be not blank if not null")
     String name;
 
-    @Size(max = 200, message = "description length should be less or equal then 200")
+    @Size(max = 200)
     String description;
 
     @OlderThen(
             value = "1895-12-28",
-            message = "releaseDate must be older then 1895-12-28",
+            message = "must be older then 1895-12-28",
             NotNull = false
     )
     LocalDate releaseDate;
