@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/films")
 public class FilmController {
@@ -29,56 +31,80 @@ public class FilmController {
 
     @PostMapping
     public Film create(@Valid @RequestBody FilmDTO data) {
-        Film film = data.toFilm(getNextId());
+        log.info("handling POST /films");
+        log.debug("with body={}", data);
 
+        return putFilm(getNextId(), data);
+    }
+
+    private Film putFilm(Integer id, FilmDTO data) {
+        log.debug("creating film with id={}", id);
+        Film film = data.toFilm(id);
+
+        log.debug("saving film");
         films.put(film.getId(), film);
 
+        log.info("sending film");
+        log.debug("film={}", film);
         return film;
     }
 
     @PutMapping("/{id}")
     public Film updateOrCreate(@PathVariable Integer id,
                                @Valid @RequestBody FilmDTO data) {
-        Integer checkedId = films.containsKey(id) ? id : getNextId();
+        log.info("handling PUT /films/{}", id);
+        log.debug("with body={}", data);
 
-        Film film = data.toFilm(checkedId);
-
-        films.put(film.getId(), film);
-
-        return film;
+        if (films.containsKey(id)) {
+            return putFilm(id, data);
+        } else {
+            log.trace("film with id={} not found", id);
+            return putFilm(getNextId(), data);
+        }
     }
 
     @PatchMapping("/{id}")
     public Film update(@PathVariable Integer id,
-                       @Valid @RequestBody FilmPatchDTO dto) {
-        Film existingFilm = films.get(id);
+                       @Valid @RequestBody FilmPatchDTO data) {
+        log.info("handling PATCH /films/{}", id);
+        log.debug("with body={}", data);
+        
+        log.debug("getting saved film");
+        Film savedFilm = films.get(id);
 
-        if (existingFilm == null) {
+        if (savedFilm == null) {
             throw new NotFoundException("Film with id=" + id + " not found");
         }
 
-        Film.FilmBuilder builder = existingFilm.toBuilder();
+        Film.FilmBuilder builder = savedFilm.toBuilder();
 
-        if (dto.getName() != null) {
-            builder.name(dto.getName());
+        if (data.getName() != null) {
+            log.trace("updating film.name");
+            builder.name(data.getName());
         }
 
-        if (dto.getDescription() != null) {
-            builder.description(dto.getDescription());
+        if (data.getDescription() != null) {
+            log.trace("updating film.description");
+            builder.description(data.getDescription());
         }
 
-        if (dto.getReleaseDate() != null) {
-            builder.releaseDate(dto.getReleaseDate());
+        if (data.getReleaseDate() != null) {
+            log.trace("updating film.releaseDate");
+            builder.releaseDate(data.getReleaseDate());
         }
 
-        if (dto.getDurationInMilliseconds() != null) {
-            builder.duration(Duration.ofMillis(dto.getDurationInMilliseconds()));
+        if (data.getDurationInMilliseconds() != null) {
+            log.trace("updating film.duration");
+            builder.duration(Duration.ofMillis(data.getDurationInMilliseconds()));
         }
 
         Film updatedFilm = builder.build();
 
+        log.debug("saving film");
         films.put(id, updatedFilm);
 
+        log.info("sending film");
+        log.debug("film={}", updatedFilm);
         return updatedFilm;
     }
 
