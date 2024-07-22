@@ -1,18 +1,18 @@
 package ru.yandex.practicum.filmorate.model;
 
+import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
 
-import java.time.Duration;
 import java.time.LocalDate;
 
 @Value
 @Builder(toBuilder = true)
-public class Film {
+public class User {
     @NonNull Integer id;
-    @NonNull String name;
-    String description;
-    @NonNull LocalDate releaseDate;
-    @NonNull Duration duration;
+    @NonNull String email;
+    @NonNull String login;
+    String name;
+    LocalDate birthday;
 }
