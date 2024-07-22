@@ -26,7 +26,7 @@ public class FilmDTO {
 
     @NotNull
     @Positive
-    Integer durationInMilliseconds;
+    Integer duration;
 
     public Film toFilm(Integer id) {
         return Film.builder()
@@ -34,7 +34,7 @@ public class FilmDTO {
                 .name(name)
                 .description(description)
                 .releaseDate(releaseDate)
-                .duration(Duration.ofMillis(durationInMilliseconds))
+                .duration(Duration.ofMinutes(duration))
                 .build();
     }
 }
