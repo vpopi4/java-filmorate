@@ -32,21 +32,30 @@ public class UserController {
     public User create(@Valid @RequestBody UserDTO data) {
         log.info("handling POST /users");
         log.debug("with body={}", data);
-        return putUser(getNextId(), data);
+
+        Integer id = getNextId();
+        
+        log.debug("creating user with id={}", id);
+        User user = data.toUser(id);
+
+        return putUser(user);
     }
 
-    @PutMapping("/{id}")
-    public User updateOrCreate(@PathVariable Integer id,
-                               @Valid @RequestBody UserDTO data) {
-        log.info("handling PUT /users/{}", id);
+    @PutMapping
+    public User updateOrCreate(@Valid @RequestBody UserDTO.WithId data) {
+        log.info("handling PUT /users");
         log.debug("with body={}", data);
 
-        if (users.containsKey(id)) {
-            return putUser(id, data);
-        } else {
-            log.trace("user with id={} not found", id);
-            return putUser(getNextId(), data);
+        Integer id = data.getId();
+
+        if (!users.containsKey(id)) {
+            throw new NotFoundException("user with id=" + id + " not found");
         }
+
+        log.debug("creating user with id={}", id);
+        User user = data.toUser(id);
+
+        return putUser(user);
     }
 
     @PatchMapping("/{id}")
@@ -94,11 +103,8 @@ public class UserController {
         return updatedUser;
     }
 
-    private User putUser(Integer id, UserDTO data) {
-        log.debug("creating user with id={}", id);
-        User user = data.toUser(id);
-
-        if (data.getName() == null || data.getName().isBlank()) {
+    private User putUser(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
             log.trace("name is blank, so login={} will be name", user.getName());
             user = user.toBuilder().name(user.getLogin()).build();
         }
