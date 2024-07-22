@@ -34,13 +34,15 @@ public class FilmController {
         log.info("handling POST /films");
         log.debug("with body={}", data);
 
-        return putFilm(getNextId(), data);
-    }
+        Integer id = getNextId();
 
-    private Film putFilm(Integer id, FilmDTO data) {
         log.debug("creating film with id={}", id);
         Film film = data.toFilm(id);
 
+        return putFilm(film);
+    }
+
+    private Film putFilm(Film film) {
         log.debug("saving film");
         films.put(film.getId(), film);
 
@@ -49,18 +51,21 @@ public class FilmController {
         return film;
     }
 
-    @PutMapping("/{id}")
-    public Film updateOrCreate(@PathVariable Integer id,
-                               @Valid @RequestBody FilmDTO data) {
-        log.info("handling PUT /films/{}", id);
+    @PutMapping
+    public Film updateOrCreate(@Valid @RequestBody FilmDTO.WithId data) {
+        log.info("handling PUT /films");
         log.debug("with body={}", data);
 
-        if (films.containsKey(id)) {
-            return putFilm(id, data);
-        } else {
-            log.trace("film with id={} not found", id);
-            return putFilm(getNextId(), data);
+        Integer id = data.getId();
+
+        if (!films.containsKey(id)) {
+            throw new NotFoundException("film with id=" + id + " not found");
         }
+
+        log.debug("creating film with id={}", id);
+        Film film = data.toFilm(id);
+
+        return putFilm(film);
     }
 
     @PatchMapping("/{id}")
@@ -68,7 +73,7 @@ public class FilmController {
                        @Valid @RequestBody FilmPatchDTO data) {
         log.info("handling PATCH /films/{}", id);
         log.debug("with body={}", data);
-        
+
         log.debug("getting saved film");
         Film savedFilm = films.get(id);
 

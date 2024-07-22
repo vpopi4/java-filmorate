@@ -34,7 +34,7 @@ public class UserController {
         log.debug("with body={}", data);
 
         Integer id = getNextId();
-        
+
         log.debug("creating user with id={}", id);
         User user = data.toUser(id);
 
