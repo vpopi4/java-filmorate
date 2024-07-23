@@ -1,8 +1,9 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Value;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
