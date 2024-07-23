@@ -42,7 +42,7 @@ public class UserController {
     }
 
     @PutMapping
-    public User updateOrCreate(@Valid @RequestBody UserDTO.WithId data) {
+    public User update(@Valid @RequestBody UserDTO.WithId data) {
         log.info("handling PUT /users");
         log.debug("with body={}", data);
 
@@ -59,8 +59,8 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
-    public User update(@PathVariable Integer id,
-                       @Valid @RequestBody UserPatchDTO data) {
+    public User updatePartially(@PathVariable Integer id,
+                                @Valid @RequestBody UserPatchDTO data) {
         log.info("handling PATCH /users/{}", id);
         log.debug("with body={}", data);
 
@@ -74,22 +74,22 @@ public class UserController {
         User.UserBuilder builder = savedUser.toBuilder();
 
         if (data.getEmail() != null) {
-            log.trace("updating user.email");
+            log.debug("updating user.email");
             builder.email(data.getEmail());
         }
 
         if (data.getLogin() != null) {
-            log.trace("updating user.login");
+            log.debug("updating user.login");
             builder.login(data.getLogin());
         }
 
         if (data.getName() != null) {
-            log.trace("updating user.name");
+            log.debug("updating user.name");
             builder.name(data.getName());
         }
 
         if (data.getBirthday() != null) {
-            log.trace("updating user.birthday");
+            log.debug("updating user.birthday");
             builder.birthday(data.getBirthday());
         }
 

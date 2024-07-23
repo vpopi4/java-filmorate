@@ -52,7 +52,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film updateOrCreate(@Valid @RequestBody FilmDTO.WithId data) {
+    public Film update(@Valid @RequestBody FilmDTO.WithId data) {
         log.info("handling PUT /films");
         log.debug("with body={}", data);
 
@@ -69,8 +69,8 @@ public class FilmController {
     }
 
     @PatchMapping("/{id}")
-    public Film update(@PathVariable Integer id,
-                       @Valid @RequestBody FilmPatchDTO data) {
+    public Film updatePartially(@PathVariable Integer id,
+                                @Valid @RequestBody FilmPatchDTO data) {
         log.info("handling PATCH /films/{}", id);
         log.debug("with body={}", data);
 
@@ -84,22 +84,22 @@ public class FilmController {
         Film.FilmBuilder builder = savedFilm.toBuilder();
 
         if (data.getName() != null) {
-            log.trace("updating film.name");
+            log.debug("updating film.name");
             builder.name(data.getName());
         }
 
         if (data.getDescription() != null) {
-            log.trace("updating film.description");
+            log.debug("updating film.description");
             builder.description(data.getDescription());
         }
 
         if (data.getReleaseDate() != null) {
-            log.trace("updating film.releaseDate");
+            log.debug("updating film.releaseDate");
             builder.releaseDate(data.getReleaseDate());
         }
 
         if (data.getDurationInMilliseconds() != null) {
-            log.trace("updating film.duration");
+            log.debug("updating film.duration");
             builder.duration(Duration.ofMillis(data.getDurationInMilliseconds()));
         }
 
