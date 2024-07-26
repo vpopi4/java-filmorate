@@ -1,31 +1,29 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.UserDTO;
 import ru.yandex.practicum.filmorate.dto.UserPatchDTO;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.InMemoryUserStorage;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
-@Slf4j
 @RestController
 @RequestMapping("/users")
+@RequiredArgsConstructor
+@Slf4j
 public class UserController {
-    private final HashMap<Integer, User> users;
-    private int seq;
-
-    public UserController() {
-        users = new HashMap<>();
-    }
+    private final InMemoryUserStorage users;
+    private int seq = 0;
 
     @GetMapping
     public List<User> getAll() {
-        return new ArrayList<>(users.values());
+        return users.getAll();
     }
 
     @PostMapping
@@ -34,11 +32,11 @@ public class UserController {
         log.debug("with body={}", data);
 
         Integer id = getNextId();
-
-        log.debug("creating user with id={}", id);
         User user = data.toUser(id);
 
-        return putUser(user);
+        log.info("creating user");
+        log.debug("user={}", user);
+        return users.create(id, user);
     }
 
     @PutMapping
@@ -47,15 +45,11 @@ public class UserController {
         log.debug("with body={}", data);
 
         Integer id = data.getId();
-
-        if (!users.containsKey(id)) {
-            throw new NotFoundException("user with id=" + id + " not found");
-        }
-
-        log.debug("creating user with id={}", id);
         User user = data.toUser(id);
 
-        return putUser(user);
+        log.info("updating user");
+        log.debug("user={}", user);
+        return users.update(id, user);
     }
 
     @PatchMapping("/{id}")
@@ -65,13 +59,13 @@ public class UserController {
         log.debug("with body={}", data);
 
         log.debug("getting saved user");
-        User savedUser = users.get(id);
+        Optional<User> savedUser = users.getById(id);
 
-        if (savedUser == null) {
+        if (savedUser.isEmpty()) {
             throw new NotFoundException("User with id=" + id + " not found");
         }
 
-        User.UserBuilder builder = savedUser.toBuilder();
+        User.UserBuilder builder = savedUser.get().toBuilder();
 
         if (data.getEmail() != null) {
             log.debug("updating user.email");

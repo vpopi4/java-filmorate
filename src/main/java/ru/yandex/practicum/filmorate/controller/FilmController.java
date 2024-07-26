@@ -1,32 +1,30 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDTO;
 import ru.yandex.practicum.filmorate.dto.FilmPatchDTO;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.InMemoryFilmStorage;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
-@Slf4j
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
+@Slf4j
 public class FilmController {
-    private final HashMap<Integer, Film> films;
-    private int seq;
-
-    public FilmController() {
-        films = new HashMap<>();
-    }
+    private final InMemoryFilmStorage films;
+    private int seq = 0;
 
     @GetMapping
     public List<Film> getAll() {
-        return new ArrayList<>(films.values());
+        return films.getAll();
     }
 
     @PostMapping
@@ -35,20 +33,11 @@ public class FilmController {
         log.debug("with body={}", data);
 
         Integer id = getNextId();
-
-        log.debug("creating film with id={}", id);
         Film film = data.toFilm(id);
 
-        return putFilm(film);
-    }
-
-    private Film putFilm(Film film) {
-        log.debug("saving film");
-        films.put(film.getId(), film);
-
-        log.info("sending film");
+        log.info("creating film");
         log.debug("film={}", film);
-        return film;
+        return films.create(film.getId(), film);
     }
 
     @PutMapping
@@ -57,15 +46,11 @@ public class FilmController {
         log.debug("with body={}", data);
 
         Integer id = data.getId();
-
-        if (!films.containsKey(id)) {
-            throw new NotFoundException("film with id=" + id + " not found");
-        }
-
-        log.debug("creating film with id={}", id);
         Film film = data.toFilm(id);
 
-        return putFilm(film);
+        log.info("updating film");
+        log.debug("film={}", film);
+        return films.update(id, film);
     }
 
     @PatchMapping("/{id}")
@@ -75,13 +60,13 @@ public class FilmController {
         log.debug("with body={}", data);
 
         log.debug("getting saved film");
-        Film savedFilm = films.get(id);
+        Optional<Film> savedFilm = films.getById(id);
 
-        if (savedFilm == null) {
+        if (savedFilm.isEmpty()) {
             throw new NotFoundException("Film with id=" + id + " not found");
         }
 
-        Film.FilmBuilder builder = savedFilm.toBuilder();
+        Film.FilmBuilder builder = savedFilm.get().toBuilder();
 
         if (data.getName() != null) {
             log.debug("updating film.name");
@@ -98,9 +83,9 @@ public class FilmController {
             builder.releaseDate(data.getReleaseDate());
         }
 
-        if (data.getDurationInMilliseconds() != null) {
+        if (data.getDuration() != null) {
             log.debug("updating film.duration");
-            builder.duration(Duration.ofMillis(data.getDurationInMilliseconds()));
+            builder.duration(Duration.ofMinutes(data.getDuration()));
         }
 
         Film updatedFilm = builder.build();
