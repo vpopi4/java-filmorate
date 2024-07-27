@@ -42,7 +42,8 @@ public class InMemoryEntityStorage<E> implements EntityStorage<E> {
 
     @Override
     public E put(Integer id, E entity) {
-        return storage.put(id, entity);
+        storage.put(id, entity);
+        return entity;
     }
 
     @Override
