@@ -4,11 +4,9 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Value;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.validator.NotBlankIfNotNull;
 import ru.yandex.practicum.filmorate.validator.OlderThen;
 
-import java.time.Duration;
 import java.time.LocalDate;
 
 @Value
@@ -29,15 +27,5 @@ public class FilmPatchDTO {
 
     @Positive
     Integer duration;
-
-    public Film toFilm(Integer id) {
-        return Film.builder()
-                .id(id)
-                .name(name)
-                .description(description)
-                .releaseDate(releaseDate)
-                .duration(Duration.ofMinutes(duration))
-                .build();
-    }
 }
 

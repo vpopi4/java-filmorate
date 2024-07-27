@@ -6,10 +6,8 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Value;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.validator.OlderThen;
 
-import java.time.Duration;
 import java.time.LocalDate;
 
 @Value
@@ -28,16 +26,6 @@ public class FilmDTO {
     @NotNull
     @Positive
     Integer duration;
-
-    public Film toFilm(Integer id) {
-        return Film.builder()
-                .id(id)
-                .name(name)
-                .description(description)
-                .releaseDate(releaseDate)
-                .duration(Duration.ofMinutes(duration))
-                .build();
-    }
 
     @Value
     @Builder
@@ -58,25 +46,5 @@ public class FilmDTO {
         @NotNull
         @Positive
         Integer duration;
-
-        public Film toFilm() {
-            return Film.builder()
-                    .id(id)
-                    .name(name)
-                    .description(description)
-                    .releaseDate(releaseDate)
-                    .duration(Duration.ofMinutes(duration))
-                    .build();
-        }
-
-        public Film toFilm(Integer id) {
-            return Film.builder()
-                    .id(id)
-                    .name(name)
-                    .description(description)
-                    .releaseDate(releaseDate)
-                    .duration(Duration.ofMinutes(duration))
-                    .build();
-        }
     }
 }

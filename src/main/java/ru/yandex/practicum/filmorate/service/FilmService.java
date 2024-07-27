@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.exceptions.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.EntityStorage;
+import ru.yandex.practicum.filmorate.util.FilmMapper;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
 
 import java.time.Duration;
@@ -35,16 +36,15 @@ public class FilmService {
 
     public Film create(FilmDTO dto) throws AlreadyExistException {
         Integer id = idGenerator.getNextId();
-        Film film = dto.toFilm(id);
+        Film film = FilmMapper.map(dto, id);
 
         return storage.create(id, film);
     }
 
     public Film update(FilmDTO.WithId dto) throws NotFoundException {
-        Integer id = dto.getId();
-        Film film = dto.toFilm(id);
+        Film film = FilmMapper.map(dto);
 
-        return storage.update(id, film);
+        return storage.update(film.getId(), film);
     }
 
     public Film updatePartially(Integer id, FilmPatchDTO dto) throws NotFoundException {
