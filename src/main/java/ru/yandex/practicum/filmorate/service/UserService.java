@@ -4,18 +4,19 @@ import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.util.IdGenerator;
 import ru.yandex.practicum.filmorate.dto.UserDTO;
 import ru.yandex.practicum.filmorate.dto.UserPatchDTO;
 import ru.yandex.practicum.filmorate.exceptions.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.EntityStorage;
+import ru.yandex.practicum.filmorate.util.IdGenerator;
 import ru.yandex.practicum.filmorate.util.UserMapper;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -29,24 +30,24 @@ public class UserService {
     }
 
     public User getById(Integer id) throws NotFoundException {
-        Optional<User> optionalUser = storage.getById(id);
-
-        if (optionalUser.isEmpty()) {
-            throw new NotFoundException("User[id=" + id + "] not found");
-        }
-
-        return optionalUser.get();
+        return storage
+                .getById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        "User[id=" + id + "] not found"
+                ));
     }
 
     public User create(UserDTO dto) throws AlreadyExistException {
         Integer id = idGenerator.getNextId();
-        User user = checkNameField(UserMapper.map(dto, id));
+        HashSet<User> friends = new HashSet<>();
+        User user = checkNameField(UserMapper.map(dto, id, friends));
 
         return storage.create(id, user);
     }
 
     public User update(UserDTO.WithId dto) throws NotFoundException {
-        User user = checkNameField(UserMapper.map(dto));
+        HashSet<User> friends = new HashSet<>();
+        User user = checkNameField(UserMapper.map(dto, friends));
 
         return storage.update(user.getId(), user);
     }
