@@ -99,7 +99,7 @@ public class UserService {
     public void deleteFriendship(Integer userId, Integer friendId) throws NotFoundException {
         User user = getById(userId);
         User friend = getById(friendId);
-        
+
         user.getFriends().remove(friend.getId());
         friend.getFriends().remove(user.getId());
 

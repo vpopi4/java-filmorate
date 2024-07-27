@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.util.FilmMapper;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -36,13 +37,15 @@ public class FilmService {
 
     public Film create(FilmDTO dto) throws AlreadyExistException {
         Integer id = idGenerator.getNextId();
-        Film film = FilmMapper.map(dto, id);
+        HashSet<Integer> likes = new HashSet<>();
+        Film film = FilmMapper.map(dto, id, likes);
 
         return storage.create(id, film);
     }
 
     public Film update(FilmDTO.WithId dto) throws NotFoundException {
-        Film film = FilmMapper.map(dto);
+        HashSet<Integer> likes = new HashSet<>();
+        Film film = FilmMapper.map(dto, likes);
 
         return storage.update(film.getId(), film);
     }

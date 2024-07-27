@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.util.DurationSerializer;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Value
 @Builder(toBuilder = true)
@@ -18,4 +19,5 @@ public class Film {
     @NonNull LocalDate releaseDate;
     @JsonSerialize(using = DurationSerializer.class)
     @NonNull Duration duration;
+    Set<Integer> likesUserId;
 }
