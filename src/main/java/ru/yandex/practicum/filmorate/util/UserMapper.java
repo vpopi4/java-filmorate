@@ -6,7 +6,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import java.util.Set;
 
 public class UserMapper {
-    public static User map(UserDTO dto, Integer id, Set<User> friends) {
+    public static User map(UserDTO dto, Integer id, Set<Integer> friends) {
         return User.builder()
                 .id(id)
                 .email(dto.getEmail())
@@ -17,7 +17,7 @@ public class UserMapper {
                 .build();
     }
 
-    public static User map(UserDTO.WithId dto, Set<User> friends) {
+    public static User map(UserDTO.WithId dto, Set<Integer> friends) {
         return User.builder()
                 .id(dto.getId())
                 .email(dto.getEmail())

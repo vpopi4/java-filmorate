@@ -67,9 +67,7 @@ public class UserController {
 
     @GetMapping("/{id}/friends")
     public Set<User> getFriends(@PathVariable Integer id) {
-        return service
-                .getById(id)
-                .getFriends();
+        return service.getFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")

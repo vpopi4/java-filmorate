@@ -15,8 +15,8 @@ import ru.yandex.practicum.filmorate.util.UserMapper;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -39,14 +39,14 @@ public class UserService {
 
     public User create(UserDTO dto) throws AlreadyExistException {
         Integer id = idGenerator.getNextId();
-        HashSet<User> friends = new HashSet<>();
+        HashSet<Integer> friends = new HashSet<>();
         User user = checkNameField(UserMapper.map(dto, id, friends));
 
         return storage.create(id, user);
     }
 
     public User update(UserDTO.WithId dto) throws NotFoundException {
-        HashSet<User> friends = new HashSet<>();
+        HashSet<Integer> friends = new HashSet<>();
         User user = checkNameField(UserMapper.map(dto, friends));
 
         return storage.update(user.getId(), user);
@@ -85,41 +85,43 @@ public class UserService {
         storage.remove(id);
     }
 
-    public Map<Integer, User> createFriendship(Integer userId, Integer friendId) throws NotFoundException {
+    public void createFriendship(Integer userId, Integer friendId) throws NotFoundException {
         User user = getById(userId);
         User friend = getById(friendId);
 
-        user.getFriends().add(friend);
-        friend.getFriends().add(user);
+        user.getFriends().add(friend.getId());
+        friend.getFriends().add(user.getId());
 
-        return Map.of(
-                userId, storage.update(userId, user),
-                friendId, storage.update(friendId, friend)
-        );
+        storage.update(userId, user);
+        storage.update(friendId, friend);
     }
 
-    public Map<Integer, User> deleteFriendship(Integer userId, Integer friendId) throws NotFoundException {
+    public void deleteFriendship(Integer userId, Integer friendId) throws NotFoundException {
         User user = getById(userId);
         User friend = getById(friendId);
+        
+        user.getFriends().remove(friend.getId());
+        friend.getFriends().remove(user.getId());
 
-        user.getFriends().remove(friend);
-        friend.getFriends().remove(user);
+        storage.update(userId, user);
+        storage.update(friendId, friend);
+    }
 
-        return Map.of(
-                userId, storage.update(userId, user),
-                friendId, storage.update(friendId, friend)
-        );
+    public Set<User> getFriends(Integer id) {
+        return getById(id)
+                .getFriends()
+                .stream()
+                .map(this::getById)
+                .collect(Collectors.toSet());
     }
 
     public Set<User> getCommonFriends(Integer userId1, Integer userId2) throws NotFoundException {
-        User user1 = getById(userId1);
-        User user2 = getById(userId2);
+        Set<User> user1Friends = getFriends(userId1);
+        Set<User> user2Friends = getFriends(userId2);
 
-        Set<User> commonFriends = new HashSet<>(user1.getFriends());
+        user1Friends.retainAll(user2Friends);
 
-        commonFriends.retainAll(user2.getFriends());
-
-        return commonFriends;
+        return user1Friends;
     }
 
     private User checkNameField(User user) {

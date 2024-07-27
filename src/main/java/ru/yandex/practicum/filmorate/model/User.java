@@ -15,5 +15,5 @@ public class User {
     @NonNull String login;
     String name;
     LocalDate birthday;
-    Set<User> friends;
+    Set<Integer> friends;
 }
