@@ -51,5 +51,21 @@ public class FilmController {
         log.debug("film was updated: {}", film);
         return film;
     }
-}
 
+    @PutMapping("/{filmId}/like/{userId}")
+    public Film putLike(@PathVariable Integer filmId,
+                        @PathVariable Integer userId) {
+        return service.putLike(filmId, userId);
+    }
+
+    @DeleteMapping("/{filmId}/like/{userId}")
+    public Film deleteLike(@PathVariable Integer filmId,
+                           @PathVariable Integer userId) {
+        return service.deleteLike(filmId, userId);
+    }
+
+    @GetMapping("/popular")
+    public List<Film> getPopularFilms(@RequestParam Integer count) {
+        return service.getPopularFilms(count);
+    }
+}

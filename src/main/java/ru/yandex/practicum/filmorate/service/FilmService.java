@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.dto.FilmPatchDTO;
 import ru.yandex.practicum.filmorate.exceptions.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.EntityStorage;
 import ru.yandex.practicum.filmorate.util.FilmMapper;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
@@ -20,6 +21,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class FilmService {
+    private final UserService userService;
     private final EntityStorage<Film> storage;
     private final IdGenerator idGenerator;
 
@@ -81,5 +83,34 @@ public class FilmService {
     public void delete(Integer id) {
         // TODO: check data safety (users)
         storage.remove(id);
+    }
+
+    public Film putLike(Integer filmId, Integer userId) throws NotFoundException {
+        Film film = getById(filmId);
+        User user = userService.getById(userId);
+
+        film.getLikesUserId().add(user.getId());
+
+        return storage.put(filmId, film);
+    }
+
+    public Film deleteLike(Integer filmId, Integer userId) {
+        Film film = getById(filmId);
+        User user = userService.getById(userId);
+
+        film.getLikesUserId().remove(user.getId());
+
+        return storage.put(filmId, film);
+    }
+
+    public List<Film> getPopularFilms(Integer count) {
+        return getAll()
+                .stream()
+                .sorted((f1, f2) -> Integer.compare(
+                        f2.getLikesUserId().size(),
+                        f1.getLikesUserId().size()
+                ))
+                .limit(count)
+                .toList();
     }
 }
