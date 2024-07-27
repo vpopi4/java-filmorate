@@ -85,6 +85,43 @@ public class UserService {
         storage.remove(id);
     }
 
+    public Map<Integer, User> createFriendship(Integer userId, Integer friendId) throws NotFoundException {
+        User user = getById(userId);
+        User friend = getById(friendId);
+
+        user.getFriends().add(friend);
+        friend.getFriends().add(user);
+
+        return Map.of(
+                userId, storage.update(userId, user),
+                friendId, storage.update(friendId, friend)
+        );
+    }
+
+    public Map<Integer, User> deleteFriendship(Integer userId, Integer friendId) throws NotFoundException {
+        User user = getById(userId);
+        User friend = getById(friendId);
+
+        user.getFriends().remove(friend);
+        friend.getFriends().remove(user);
+
+        return Map.of(
+                userId, storage.update(userId, user),
+                friendId, storage.update(friendId, friend)
+        );
+    }
+
+    public Set<User> getCommonFriends(Integer userId1, Integer userId2) throws NotFoundException {
+        User user1 = getById(userId1);
+        User user2 = getById(userId2);
+
+        Set<User> commonFriends = new HashSet<>(user1.getFriends());
+
+        commonFriends.retainAll(user2.getFriends());
+
+        return commonFriends;
+    }
+
     private User checkNameField(User user) {
         if (StringUtils.isBlank(user.getName())) {
             log.trace("name is blank, so login={} will be name", user.getName());
