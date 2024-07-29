@@ -1,0 +1,116 @@
+package ru.yandex.practicum.filmorate.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.FilmDTO;
+import ru.yandex.practicum.filmorate.dto.FilmPatchDTO;
+import ru.yandex.practicum.filmorate.exceptions.AlreadyExistException;
+import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.EntityStorage;
+import ru.yandex.practicum.filmorate.util.FilmMapper;
+import ru.yandex.practicum.filmorate.util.IdGenerator;
+
+import java.time.Duration;
+import java.util.HashSet;
+import java.util.List;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class FilmService {
+    private final UserService userService;
+    private final EntityStorage<Film> storage;
+    private final IdGenerator idGenerator;
+
+    public List<Film> getAll() {
+        return storage.getAll();
+    }
+
+    public Film getById(Integer id) throws NotFoundException {
+        return storage
+                .getById(id)
+                .orElseThrow(() -> new NotFoundException(
+                        "Film[id=" + id + "] not found"
+                ));
+    }
+
+    public Film create(FilmDTO dto) throws AlreadyExistException {
+        Integer id = idGenerator.getNextId();
+        HashSet<Integer> likes = new HashSet<>();
+        Film film = FilmMapper.map(dto, id, likes);
+
+        return storage.create(id, film);
+    }
+
+    public Film update(FilmDTO.WithId dto) throws NotFoundException {
+        HashSet<Integer> likes = new HashSet<>();
+        Film film = FilmMapper.map(dto, likes);
+
+        return storage.update(film.getId(), film);
+    }
+
+    public Film updatePartially(Integer id, FilmPatchDTO dto) throws NotFoundException {
+        Film.FilmBuilder builder = getById(id).toBuilder();
+
+        if (dto.getName() != null) {
+            log.debug("updating film.name");
+            builder.name(dto.getName());
+        }
+
+        if (dto.getDescription() != null) {
+            log.debug("updating film.description");
+            builder.description(dto.getDescription());
+        }
+
+        if (dto.getReleaseDate() != null) {
+            log.debug("updating film.releaseDate");
+            builder.releaseDate(dto.getReleaseDate());
+        }
+
+        if (dto.getDuration() != null) {
+            log.debug("updating film.duration");
+            builder.duration(Duration.ofMinutes(dto.getDuration()));
+        }
+
+        Film film = builder.build();
+
+        return storage.put(id, film);
+    }
+
+    public void delete(Integer id) {
+        // TODO: check data safety (users)
+        storage.remove(id);
+    }
+
+    public Film putLike(Integer filmId, Integer userId) throws NotFoundException {
+        Film film = getById(filmId);
+        User user = userService.getById(userId);
+
+        film.getLikesUserId().add(user.getId());
+
+        return storage.put(filmId, film);
+    }
+
+    public Film deleteLike(Integer filmId, Integer userId) {
+        Film film = getById(filmId);
+        User user = userService.getById(userId);
+
+        film.getLikesUserId().remove(user.getId());
+
+        return storage.put(filmId, film);
+    }
+
+    public List<Film> getPopularFilms(Integer count) {
+        return getAll()
+                .stream()
+                .sorted((f1, f2) -> Integer.compare(
+                        f2.getLikesUserId().size(),
+                        f1.getLikesUserId().size()
+                ))
+                .limit(count)
+                .toList();
+    }
+}
