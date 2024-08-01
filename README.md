@@ -42,7 +42,14 @@ Table films {
   release_date date [not null]
   duration interval [not null]
   mpa_rating_id integer [ref: > mpa_ratings.id]
-  genre_id integer [ref: > genres.id]
+}
+
+Table film_genres {
+  film_id integer [ref: > films.id, not null]
+  genre_id integer [ref: > genres.id, not null]
+  indexes {
+    (film_id, genre_id) [pk]
+  }
 }
 
 Table film_likes {
