@@ -40,7 +40,7 @@ Table films {
   name varchar [not null]
   description varchar(200)
   release_date date [not null]
-  duration interval [not null]
+  duration_in_minutes integer [not null]
   mpa_rating_id integer [ref: > mpa_ratings.id]
 }
 
