@@ -19,5 +19,7 @@ public class Film {
     @NonNull LocalDate releaseDate;
     @JsonSerialize(using = DurationSerializer.class)
     @NonNull Duration duration;
+    // TODO: add mpaRating fields
+    // he-he-he
     Set<Integer> likesUserId;
 }
