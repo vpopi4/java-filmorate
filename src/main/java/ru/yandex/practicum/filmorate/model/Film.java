@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.util.DurationSerializer;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Value
@@ -19,7 +20,8 @@ public class Film {
     @NonNull LocalDate releaseDate;
     @JsonSerialize(using = DurationSerializer.class)
     @NonNull Duration duration;
-    // TODO: add mpaRating fields
-    // he-he-he
+
+    MpaRating rating;
+    List<Genre> genres;
     Set<Integer> likesUserId;
 }
