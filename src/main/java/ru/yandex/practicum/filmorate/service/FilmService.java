@@ -5,11 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.FilmDTO;
 import ru.yandex.practicum.filmorate.dto.FilmPatchDTO;
-import ru.yandex.practicum.filmorate.exceptions.AlreadyExistException;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.EntityStorage;
+import ru.yandex.practicum.filmorate.storage.EntityDAO;
 import ru.yandex.practicum.filmorate.util.FilmMapper;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
 
@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FilmService {
     private final UserService userService;
-    private final EntityStorage<Film> storage;
+    private final EntityDAO<Film> storage;
     private final IdGenerator idGenerator;
 
     public List<Film> getAll() {
@@ -42,14 +42,14 @@ public class FilmService {
         HashSet<Integer> likes = new HashSet<>();
         Film film = FilmMapper.map(dto, id, likes);
 
-        return storage.create(id, film);
+        return storage.create(film);
     }
 
     public Film update(FilmDTO.WithId dto) throws NotFoundException {
         HashSet<Integer> likes = new HashSet<>();
         Film film = FilmMapper.map(dto, likes);
 
-        return storage.update(film.getId(), film);
+        return storage.update(film);
     }
 
     public Film updatePartially(Integer id, FilmPatchDTO dto) throws NotFoundException {
@@ -77,12 +77,11 @@ public class FilmService {
 
         Film film = builder.build();
 
-        return storage.put(id, film);
+        return storage.update(film);
     }
 
     public void delete(Integer id) {
-        // TODO: check data safety (users)
-        storage.remove(id);
+        storage.delete(id);
     }
 
     public Film putLike(Integer filmId, Integer userId) throws NotFoundException {
@@ -91,7 +90,7 @@ public class FilmService {
 
         film.getLikesUserId().add(user.getId());
 
-        return storage.put(filmId, film);
+        return storage.update(film);
     }
 
     public Film deleteLike(Integer filmId, Integer userId) {
@@ -100,7 +99,7 @@ public class FilmService {
 
         film.getLikesUserId().remove(user.getId());
 
-        return storage.put(filmId, film);
+        return storage.update(film);
     }
 
     public List<Film> getPopularFilms(Integer count) {
