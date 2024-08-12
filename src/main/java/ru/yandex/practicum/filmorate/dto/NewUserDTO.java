@@ -1,6 +1,9 @@
 package ru.yandex.practicum.filmorate.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Value;
 import ru.yandex.practicum.filmorate.validator.NotBlankIfNotNull;
@@ -10,7 +13,6 @@ import java.time.LocalDate;
 
 public class NewUserDTO {
     private interface Id {
-        @NotNull
         Integer getId();
     }
 
@@ -52,7 +54,7 @@ public class NewUserDTO {
         @Builder
         public static class Update
                 implements Id, Email, Login, Name, Birthday {
-            Integer Id;
+            @NotNull Integer id;
             @NotNull String email;
             @NotBlank String login;
             String name;
@@ -64,7 +66,8 @@ public class NewUserDTO {
         public static class UpdatePartially
                 implements Email, Login, Name, Birthday {
             String email;
-            @NotBlankIfNotNull String login;
+            @NotBlankIfNotNull
+            String login;
             String name;
             LocalDate birthday;
         }

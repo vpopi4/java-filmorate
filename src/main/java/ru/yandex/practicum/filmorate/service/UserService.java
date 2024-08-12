@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
 import io.micrometer.common.util.StringUtils;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.NewUserDTO;
@@ -20,11 +20,17 @@ import java.util.Set;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class UserService {
     private final UserDao storage;
     private final FriendshipDao friendshipStorage;
     private final IdGenerator idGenerator;
+
+    @Autowired
+    public UserService(UserDao storage, FriendshipDao friendshipStorage) {
+        this.storage = storage;
+        this.friendshipStorage = friendshipStorage;
+        this.idGenerator = new IdGenerator(storage.getMaxId());
+    }
 
     public List<User> getAll() throws DataAccessException {
         return storage.getAll();

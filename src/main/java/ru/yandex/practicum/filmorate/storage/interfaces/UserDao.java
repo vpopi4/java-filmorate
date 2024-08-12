@@ -18,4 +18,6 @@ public interface UserDao {
     User update(User entity) throws NotFoundException, AlreadyExistException, DataAccessException;
 
     void delete(Integer id) throws DataAccessException;
+
+    Integer getMaxId() throws DataAccessException;
 }

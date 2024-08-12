@@ -12,6 +12,10 @@ public class IdGenerator {
         seq = 0;
     }
 
+    public IdGenerator(int initValue) {
+        seq = initValue;
+    }
+
     public Integer getNextId() {
         return ++seq;
     }

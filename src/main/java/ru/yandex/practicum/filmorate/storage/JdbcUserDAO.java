@@ -68,7 +68,8 @@ public class JdbcUserDao implements UserDao {
             throw new NotFoundException("User not found");
         }
 
-        return user;
+        return getById(user.getId())
+                .orElseThrow(() -> new IllegalStateException("User not found but updated: " + user));
     }
 
     private void checkUnique(String email, String login) {
@@ -84,5 +85,11 @@ public class JdbcUserDao implements UserDao {
     @Override
     public void delete(Integer id) throws DataAccessException {
         jdbcTemplate.update("DELETE FROM users WHERE id = ?", id);
+    }
+
+    @Override
+    public Integer getMaxId() throws DataAccessException {
+        Integer result = jdbcTemplate.queryForObject("SELECT MAX(id) FROM users;", Integer.class);
+        return result == null ? 0 : result;
     }
 }
