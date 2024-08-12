@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.interfaces.FriendshipDao;
 
 import java.util.HashSet;
 import java.util.List;
@@ -18,18 +19,14 @@ import java.util.Set;
 @Repository
 @RequiredArgsConstructor
 public class JdbcFriendshipDao implements FriendshipDao {
-    private final JdbcTemplate jdbcTemplate;
-    private final RowMapper<Friendship> mapper;
-    private final RowMapper<User> userMapper;
     public static final String GET_USER_FRIENDS_ID_QUERY = """
             SELECT user_id_to AS friend_id
             FROM friendships
-            WHERE user_id_from = ? AND is_accepted = true
-            UNION
-            SELECT user_id_from AS friend_id
-            FROM friendships
-            WHERE user_id_to = ? AND is_accepted = true;
+            WHERE user_id_from = ?
             """;
+    private final JdbcTemplate jdbcTemplate;
+    private final RowMapper<Friendship> mapper;
+    private final RowMapper<User> userMapper;
 
     @Override
     public Friendship create(Friendship friendship) throws AlreadyExistException, DataAccessException {
@@ -68,16 +65,16 @@ public class JdbcFriendshipDao implements FriendshipDao {
     @Override
     public Set<Integer> getUserFriendsId(Integer userId) {
         return new HashSet<>(jdbcTemplate.queryForList(
-            GET_USER_FRIENDS_ID_QUERY,
-            Integer.class,
-            userId, userId
+                GET_USER_FRIENDS_ID_QUERY,
+                Integer.class,
+                userId
         ));
     }
 
     @Override
     public Set<User> getUserFriends(Integer userId) throws DataAccessException {
         String sql = "SELECT * FROM users WHERE id IN (%s)".formatted(GET_USER_FRIENDS_ID_QUERY);
-        return new HashSet<>(jdbcTemplate.query(sql, userMapper, userId, userId));
+        return new HashSet<>(jdbcTemplate.query(sql, userMapper, userId));
     }
 
     @Override

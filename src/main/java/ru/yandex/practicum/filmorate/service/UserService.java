@@ -142,13 +142,8 @@ public class UserService {
         }
     }
 
-    public User findFriendsId(User user) {
-        Set<Integer> friendsId = friendshipStorage.getUserFriendsId(user.getId());
-
-        return user.toBuilder().friendsId(friendsId).build();
-    }
-
     public Set<User> getFriends(Integer id) {
+        getById(id);
         return friendshipStorage.getUserFriends(id);
     }
 
