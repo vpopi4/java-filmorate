@@ -6,15 +6,12 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserDao {
     List<User> getAll() throws DataAccessException;
 
-    User getById(Integer id) throws NotFoundException, DataAccessException;
-
-    User getByEmail(String email) throws NotFoundException, DataAccessException;
-
-    User getByLogin(String login) throws NotFoundException, DataAccessException;
+    Optional<User> getById(Integer id) throws DataAccessException;
 
     User create(User user) throws AlreadyExistException, DataAccessException;
 

@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -23,27 +24,9 @@ public class JdbcUserDao implements UserDao {
     }
 
     @Override
-    public User getById(Integer id) throws NotFoundException, DataAccessException {
+    public Optional<User> getById(Integer id) throws NotFoundException, DataAccessException {
         return jdbcTemplate.query("SELECT * FROM users WHERE id = ?", userRowMapper, id)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("User[id=" + id + "] not found"));
-    }
-
-    @Override
-    public User getByEmail(String email) throws NotFoundException, DataAccessException {
-        return jdbcTemplate.query("SELECT * FROM users WHERE email = ?", userRowMapper, email)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("User[email=" + email + "] not found"));
-    }
-
-    @Override
-    public User getByLogin(String login) throws NotFoundException, DataAccessException {
-        return jdbcTemplate.query("SELECT * FROM users WHERE login = ?", userRowMapper, login)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("User[login=" + login + "] not found"));
+                .stream().findFirst();
     }
 
     @Override
@@ -63,11 +46,8 @@ public class JdbcUserDao implements UserDao {
             throw new IllegalStateException("User not created: " + user);
         }
 
-        try {
-            return getById(user.getId());
-        } catch (NotFoundException e) {
-            throw new IllegalStateException("User not found but created: " + user);
-        }
+        return getById(user.getId())
+                .orElseThrow(() -> new IllegalStateException("User not found but created: " + user));
     }
 
     @Override

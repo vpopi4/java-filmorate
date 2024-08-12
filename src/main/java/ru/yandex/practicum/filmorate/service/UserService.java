@@ -31,7 +31,8 @@ public class UserService {
     }
 
     public User getById(Integer id) throws NotFoundException, DataAccessException {
-        return storage.getById(id);
+        return storage.getById(id)
+                .orElseThrow(() -> new NotFoundException("User[id=" + id + "] not found"));
     }
 
     public User create(NewUserDTO.Request.Create dto) throws AlreadyExistException, DataAccessException {
