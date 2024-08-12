@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.interfaces.UserDao;
 
 import java.util.List;
 import java.util.Optional;

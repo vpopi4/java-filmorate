@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.interfaces;
 
 import org.springframework.dao.DataAccessException;
 import ru.yandex.practicum.filmorate.exception.AlreadyExistException;

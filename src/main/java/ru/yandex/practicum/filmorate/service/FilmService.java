@@ -9,21 +9,19 @@ import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.EntityDAO;
-import ru.yandex.practicum.filmorate.util.FilmMapper;
+import ru.yandex.practicum.filmorate.storage.interfaces.FilmDao;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
 
 import java.time.Duration;
-import java.util.HashSet;
 import java.util.List;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class FilmService {
-    private final UserService userService;
-    private final EntityDAO<Film> storage;
     private final IdGenerator idGenerator;
+    private final UserService userService;
+    private final FilmDao storage;
 
     public List<Film> getAll() {
         return storage.getAll();
@@ -39,15 +37,25 @@ public class FilmService {
 
     public Film create(FilmDTO dto) throws AlreadyExistException {
         Integer id = idGenerator.getNextId();
-        HashSet<Integer> likes = new HashSet<>();
-        Film film = FilmMapper.map(dto, id, likes);
+        Film film = Film.builder()
+                .id(id)
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .releaseDate(dto.getReleaseDate())
+                .duration(Duration.ofMinutes(dto.getDuration()))
+                .build();
 
         return storage.create(film);
     }
 
     public Film update(FilmDTO.WithId dto) throws NotFoundException {
-        HashSet<Integer> likes = new HashSet<>();
-        Film film = FilmMapper.map(dto, likes);
+        Film film = getById(dto.getId()).toBuilder()
+                .id(dto.getId())
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .releaseDate(dto.getReleaseDate())
+                .duration(Duration.ofMinutes(dto.getDuration()))
+                .build();
 
         return storage.update(film);
     }

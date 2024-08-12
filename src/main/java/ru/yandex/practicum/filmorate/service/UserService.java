@@ -10,8 +10,8 @@ import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FriendshipDao;
-import ru.yandex.practicum.filmorate.storage.UserDao;
+import ru.yandex.practicum.filmorate.storage.interfaces.FriendshipDao;
+import ru.yandex.practicum.filmorate.storage.interfaces.UserDao;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
 
 import java.util.List;
