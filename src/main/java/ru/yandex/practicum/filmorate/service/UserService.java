@@ -10,8 +10,8 @@ import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.JdbcFriendshipRepository;
-import ru.yandex.practicum.filmorate.storage.UserDAO;
+import ru.yandex.practicum.filmorate.storage.FriendshipDAO;
+import ru.yandex.practicum.filmorate.storage.UserDao;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
 
 import java.util.List;
@@ -21,25 +21,19 @@ import java.util.Set;
 @Slf4j
 @RequiredArgsConstructor
 public class UserService {
-    private final UserDAO storage;
-    private final JdbcFriendshipRepository friendshipStorage;
+    private final UserDao storage;
+    private final FriendshipDAO friendshipStorage;
     private final IdGenerator idGenerator;
 
-    public List<User> getAll() {
+    public List<User> getAll() throws DataAccessException {
         return storage.getAll();
     }
 
-    public User getById(Integer id) throws NotFoundException {
-        return storage
-                .getById(id)
-                .orElseThrow(() -> new NotFoundException(
-                        "User[id=" + id + "] not found"
-                ));
+    public User getById(Integer id) throws NotFoundException, DataAccessException {
+        return storage.getById(id);
     }
 
-    public User create(NewUserDTO.Request.Create dto) throws AlreadyExistException {
-        checkUnique(dto.getEmail(), dto.getLogin());
-
+    public User create(NewUserDTO.Request.Create dto) throws AlreadyExistException, DataAccessException {
         User user = User.builder()
                 .id(idGenerator.getNextId())
                 .email(dto.getEmail())
@@ -50,16 +44,11 @@ public class UserService {
                 .birthday(dto.getBirthday())
                 .build();
 
-        try {
-            return storage.create(user);
-        } catch (DataAccessException e) {
-            throw new RuntimeException(e);
-        }
+        return storage.create(user);
     }
 
-    public User update(NewUserDTO.Request.Update dto) throws NotFoundException, AlreadyExistException, DataAccessException {
-        checkUnique(dto.getEmail(), dto.getLogin());
-
+    public User update(NewUserDTO.Request.Update dto)
+            throws NotFoundException, AlreadyExistException, DataAccessException {
         User user = User.builder()
                 .id(dto.getId())
                 .email(dto.getEmail())
@@ -70,23 +59,7 @@ public class UserService {
                 .birthday(dto.getBirthday())
                 .build();
 
-        try {
-            return storage.update(user);
-        } catch (NotFoundException e) {
-            throw new NotFoundException("User[id=" + user.getId() + "] not found");
-        }
-    }
-
-    private void checkUnique(String email, String login) {
-        boolean isUnique = storage.checkUnique(email, login);
-
-        if (!isUnique) {
-            throw new AlreadyExistException(String.format(
-                    "User[email='%s' | login='%s'] already exists",
-                    email,
-                    login
-            ));
-        }
+        return storage.update(user);
     }
 
     public User updatePartially(
