@@ -10,11 +10,12 @@ import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FriendshipDAO;
+import ru.yandex.practicum.filmorate.storage.FriendshipDao;
 import ru.yandex.practicum.filmorate.storage.UserDao;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -22,7 +23,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UserService {
     private final UserDao storage;
-    private final FriendshipDAO friendshipStorage;
+    private final FriendshipDao friendshipStorage;
     private final IdGenerator idGenerator;
 
     public List<User> getAll() throws DataAccessException {
@@ -101,33 +102,23 @@ public class UserService {
         getById(userId);
         getById(friendId);
 
-        List<Friendship> friendships = friendshipStorage.getByIds(userId, friendId);
+        Optional<Friendship> friendRequest = friendshipStorage.getByIds(userId, friendId);
 
-        if (friendships.size() > 2) {
-            // TODO: log the list
-            throw new IllegalStateException("more than 2 friend requests found");
-        } else if (friendships.size() == 2) {
+        if (friendRequest.isPresent()) {
             throw new AlreadyExistException("friend request already sent");
-        } else if (friendships.size() == 1) {
-            Friendship friendship = friendships.getFirst();
+        }
 
-            if (friendship.getUserIdFrom().equals(userId)) {
-                throw new AlreadyExistException("friend request already sent");
-            }
+        Friendship.FriendshipBuilder requestBuilder = Friendship.builder()
+                .userIdFrom(userId)
+                .userIdTo(friendId);
 
-            friendshipStorage.create(Friendship.builder()
-                    .userIdFrom(userId)
-                    .userIdTo(friendId)
-                    .isAccepted(true)
-                    .build());
-            friendshipStorage.update(friendship.toBuilder()
-                    .isAccepted(true)
-                    .build());
+        Optional<Friendship> friendRequestReverse = friendshipStorage.getByIds(friendId, userId);
+
+        if (friendRequestReverse.isPresent()) {
+            friendshipStorage.create(requestBuilder.isAccepted(true).build());
+            friendshipStorage.update(friendRequestReverse.get().toBuilder().isAccepted(true).build());
         } else {
-            friendshipStorage.create(Friendship.builder()
-                    .userIdFrom(userId)
-                    .userIdTo(friendId)
-                    .build());
+            friendshipStorage.create(requestBuilder.isAccepted(false).build());
         }
     }
 
@@ -137,14 +128,10 @@ public class UserService {
 
         friendshipStorage.delete(userId, friendId);
 
-        List<Friendship> friendships = friendshipStorage.getByIds(userId, friendId);
+        Optional<Friendship> reverseRequest = friendshipStorage.getByIds(userId, friendId);
 
-        if (friendships.size() == 1) {
-            friendshipStorage.update(friendships
-                    .getFirst().toBuilder()
-                    .isAccepted(false)
-                    .build())
-            ;
+        if (reverseRequest.isPresent()) {
+            friendshipStorage.update(reverseRequest.get().toBuilder().isAccepted(false).build());
         }
     }
 
