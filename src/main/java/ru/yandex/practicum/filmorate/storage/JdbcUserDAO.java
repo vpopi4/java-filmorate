@@ -11,7 +11,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.util.UserRowMapper;
 
 @Repository
-public class JdbcUserDAO extends JdbcEntityDAO<User> {
+public class JdbcUserDAO extends JdbcEntityDAO<User> implements UserDAO {
     @Autowired
     public JdbcUserDAO(JdbcTemplate jdbcTemplate) {
         super(jdbcTemplate);
@@ -28,17 +28,21 @@ public class JdbcUserDAO extends JdbcEntityDAO<User> {
     }
 
     @Override
-    public User create(User user) throws AlreadyExistException {
+    public User create(User user) throws AlreadyExistException, DataAccessException {
         try {
-            String sql = "INSERT INTO users (email, login, name, birthday) " +
-                    "VALUES (?, ?, ?, ?) RETURNING *;";
+            String sql = "INSERT INTO users (id, email, login, name, birthday) " +
+                    "VALUES (?, ?, ?, ?, ?);";
 
-            return jdbcTemplate.queryForObject(sql, getRowMapper(),
+            jdbcTemplate.update(sql,
+                    user.getId(),
                     user.getEmail(),
                     user.getLogin(),
                     user.getName(),
                     user.getBirthday()
             );
+
+            return getById(user.getId())
+                    .orElseThrow(() -> new IllegalStateException("entity not found but created"));
         } catch (DataAccessException e) {
             throw new AlreadyExistException(e.getMessage(), e);
         }
@@ -71,5 +75,14 @@ public class JdbcUserDAO extends JdbcEntityDAO<User> {
         }
 
         return user;
+    }
+
+    @Override
+    public boolean checkUnique(String email, String login) {
+        String sql = "SELECT COUNT(*) FROM users WHERE email = ? OR login = ?";
+
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, email, login);
+
+        return count != null && count == 0;
     }
 }

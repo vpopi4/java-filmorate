@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 @Repository
-public class JdbcFriendshipStorage extends JdbcFriendshipDAO {
+public class JdbcFriendshipStorage extends JdbcFriendshipDAO implements FriendshipDAO {
     public static final String GET_USER_FRIENDS_ID_QUERY = """
             SELECT user_id_to AS friend_id
             FROM friendships
@@ -23,6 +24,7 @@ public class JdbcFriendshipStorage extends JdbcFriendshipDAO {
             WHERE user_id_to = ? AND is_accepted = true;
             """;
 
+    @Autowired
     public JdbcFriendshipStorage(JdbcTemplate jdbcTemplate) {
         super(jdbcTemplate);
     }
