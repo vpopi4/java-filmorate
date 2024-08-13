@@ -1,10 +1,11 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.FilmDTO;
 import ru.yandex.practicum.filmorate.dto.FilmPatchDTO;
+import ru.yandex.practicum.filmorate.dto.NewFilmDTO;
 import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -17,11 +18,17 @@ import java.util.List;
 
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class FilmService {
     private final IdGenerator idGenerator;
     private final UserService userService;
     private final FilmDao storage;
+
+    @Autowired
+    public FilmService(UserService userService, FilmDao storage) {
+        this.userService = userService;
+        this.storage = storage;
+        this.idGenerator = new IdGenerator(storage.getMaxId());
+    }
 
     public List<Film> getAll() {
         return storage.getAll();

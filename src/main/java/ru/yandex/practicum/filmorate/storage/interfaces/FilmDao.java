@@ -18,4 +18,6 @@ public interface FilmDao {
     Film update(Film film) throws NotFoundException, DataAccessException;
 
     void delete(Integer id) throws DataAccessException;
+
+    Integer getMaxId() throws DataAccessException;
 }

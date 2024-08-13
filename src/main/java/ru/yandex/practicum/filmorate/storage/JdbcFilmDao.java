@@ -89,16 +89,17 @@ public class JdbcFilmDao implements FilmDao {
                     release_date,
                     duration_in_minutes,
                     mpa_rating_id
-                ) VALUES (?, ?, ?, ?, ?);
+                ) VALUES (?, ?, ?, ?, ?, ?);
                 """;
 
+        MpaRating rating = film.getRating();
         jdbcTemplate.update(sql,
                 film.getId(),
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration().toMinutes(),
-                film.getRating().getId()
+                rating == null ? null : rating.getId()
         );
 
         return getById(film.getId())
@@ -159,6 +160,12 @@ public class JdbcFilmDao implements FilmDao {
     @Override
     public void delete(Integer id) throws DataAccessException {
         jdbcTemplate.update("DELETE FROM films WHERE id = ?", id);
+    }
+
+    @Override
+    public Integer getMaxId() throws DataAccessException {
+        Integer result = jdbcTemplate.queryForObject("SELECT MAX(id) FROM films;", Integer.class);
+        return result == null ? 0 : result;
     }
 
     private Set<Integer> getLikesUserId(Integer filmId) throws DataAccessException {
