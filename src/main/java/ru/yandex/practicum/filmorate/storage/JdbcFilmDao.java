@@ -5,9 +5,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.interfaces.AbstractJdbcDao;
 
 @Repository
-public class JdbcFilmDao extends JdbcEntityDao<Film> {
+public class JdbcFilmDao extends AbstractJdbcDao<Film> {
     @Autowired
     public JdbcFilmDao(JdbcTemplate jdbcTemplate, RowMapper<Film> rowMapper) {
         super(jdbcTemplate, "films", rowMapper);

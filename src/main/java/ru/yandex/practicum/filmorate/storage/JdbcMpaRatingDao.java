@@ -5,9 +5,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.MpaRating;
+import ru.yandex.practicum.filmorate.storage.interfaces.AbstractJdbcDao;
 
 @Repository
-public class JdbcMpaRatingDao extends JdbcEntityDao<MpaRating> {
+public class JdbcMpaRatingDao extends AbstractJdbcDao<MpaRating> {
     @Autowired
     public JdbcMpaRatingDao(JdbcTemplate jdbcTemplate, RowMapper<MpaRating> rowMapper) {
         super(jdbcTemplate, "mpa_ratings", rowMapper);

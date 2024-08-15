@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.dto.NewUserDTO;
+import ru.yandex.practicum.filmorate.dto.UserDTO;
 import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.UserDtoMapper;
@@ -38,7 +38,7 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("User[id=" + id + "] not found"));
     }
 
-    public User create(NewUserDTO.Request.Create dto) throws AlreadyExistException, DataAccessException {
+    public User create(UserDTO.Request.Create dto) throws AlreadyExistException, DataAccessException {
         if (storage.getByEmail(dto.getEmail()).isPresent()
                 || storage.getByLogin(dto.getLogin()).isPresent()) {
             throw new AlreadyExistException("User with such email or login already exist");
@@ -60,7 +60,7 @@ public class UserService {
         }
     }
 
-    public User update(NewUserDTO.Request.Update dto)
+    public User update(UserDTO.Request.Update dto)
             throws NotFoundException, AlreadyExistException, DataAccessException {
         if (storage.getByEmail(dto.getEmail()).isPresent()
                 || storage.getByLogin(dto.getLogin()).isPresent()) {
@@ -76,7 +76,7 @@ public class UserService {
 
     public User updatePartially(
             Integer id,
-            NewUserDTO.Request.UpdatePartially dto
+            UserDTO.Request.UpdatePartially dto
     ) throws NotFoundException, DataAccessException {
         if (storage.getByEmail(dto.getEmail()).isPresent()
                 || storage.getByLogin(dto.getLogin()).isPresent()) {

@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.interfaces;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -9,12 +9,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public abstract class JdbcEntityDao<E> implements NewEntityDao<E> {
+public abstract class AbstractJdbcDao<E> implements Dao<E> {
     protected final JdbcTemplate jdbcTemplate;
     protected final String tableName;
     protected final RowMapper<E> rowMapper;
 
-    public JdbcEntityDao(JdbcTemplate jdbcTemplate, String tableName, RowMapper<E> rowMapper) {
+    public AbstractJdbcDao(JdbcTemplate jdbcTemplate, String tableName, RowMapper<E> rowMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.tableName = tableName;
         this.rowMapper = rowMapper;

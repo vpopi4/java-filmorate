@@ -1,10 +1,10 @@
 package ru.yandex.practicum.filmorate.mapper;
 
-import ru.yandex.practicum.filmorate.dto.NewUserDTO;
+import ru.yandex.practicum.filmorate.dto.UserDTO;
 import ru.yandex.practicum.filmorate.model.User;
 
 public class UserDtoMapper {
-    public static User map(NewUserDTO.Request.Create dto, Integer id) {
+    public static User map(UserDTO.Request.Create dto, Integer id) {
         return User.builder()
                 .id(id)
                 .email(dto.getEmail())
@@ -16,7 +16,7 @@ public class UserDtoMapper {
                 .build();
     }
 
-    public static User map(NewUserDTO.Request.Update dto) {
+    public static User map(UserDTO.Request.Update dto) {
         return User.builder()
                 .id(dto.getId())
                 .email(dto.getEmail())

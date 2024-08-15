@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -21,12 +22,25 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class ErrorHandlingControllerAdvice {
     @ResponseBody
+    @ExceptionHandler(DataAccessException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public BaseResponseBody<Void> onDataAccessException(
+            DataAccessException e
+    ) {
+        log.warn(e.getMessage());
+        return BaseResponseBody.<Void>builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .message(e.getMessage())
+                .build();
+    }
+
+    @ResponseBody
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public BaseResponseBody<Void> onNotFoundException(
             NotFoundException e
     ) {
-        log.warn(e.getMessage(), e);
+        log.warn(e.getMessage());
         return BaseResponseBody.<Void>builder()
                 .status(e.getStatus().value())
                 .message(e.getMessage())
@@ -39,7 +53,7 @@ public class ErrorHandlingControllerAdvice {
     public BaseResponseBody<Void> onDeserializationException(
             HttpMessageNotReadableException e
     ) {
-        log.warn(e.getMessage(), e);
+        log.warn(e.getMessage());
         return BaseResponseBody.<Void>builder()
                 .status(HttpStatus.BAD_REQUEST.value())
                 .message(e.getMessage())
@@ -52,7 +66,7 @@ public class ErrorHandlingControllerAdvice {
     public ValidationErrorResponse onConstraintValidationException(
             ConstraintViolationException e
     ) {
-        log.warn(e.getMessage(), e);
+        log.warn(e.getMessage());
         final List<Violation> violations = e.getConstraintViolations().stream()
                 .map(
                         violation -> new Violation(
@@ -70,7 +84,7 @@ public class ErrorHandlingControllerAdvice {
     public ValidationErrorResponse onMethodArgumentNotValidException(
             MethodArgumentNotValidException e
     ) {
-        log.warn(e.getMessage(), e);
+        log.warn(e.getMessage());
         final List<Violation> violations = e.getBindingResult().getFieldErrors().stream()
                 .map(error -> new Violation(error.getField(), error.getDefaultMessage()))
                 .collect(Collectors.toList());

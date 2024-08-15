@@ -1,11 +1,11 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.interfaces;
 
 import org.springframework.dao.DataAccessException;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface NewEntityDao<E> {
+public interface Dao<E> {
     Optional<E> getById(Integer id) throws DataAccessException;
 
     List<E> getAll() throws DataAccessException;

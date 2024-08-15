@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDTO;
 import ru.yandex.practicum.filmorate.dto.FilmPatchDTO;
+import ru.yandex.practicum.filmorate.dto.NewFilmDTO;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -31,7 +32,7 @@ public class FilmController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film create(@Valid @RequestBody FilmDTO data) {
+    public Film create(@Valid @RequestBody NewFilmDTO.Request.Create data) {
         Film film = service.create(data);
         log.debug("film was created: {}", film);
         return film;

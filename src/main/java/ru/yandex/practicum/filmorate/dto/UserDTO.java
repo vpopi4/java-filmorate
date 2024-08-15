@@ -11,7 +11,7 @@ import ru.yandex.practicum.filmorate.validator.NotBlankIfNotNull;
 import java.time.Instant;
 import java.time.LocalDate;
 
-public class NewUserDTO {
+public class UserDTO {
     private interface Id {
         Integer getId();
     }

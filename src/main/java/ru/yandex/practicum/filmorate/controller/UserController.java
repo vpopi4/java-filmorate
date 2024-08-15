@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.dto.NewUserDTO;
+import ru.yandex.practicum.filmorate.dto.UserDTO;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
 
@@ -31,14 +31,14 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User create(@Valid @RequestBody NewUserDTO.Request.Create data) {
+    public User create(@Valid @RequestBody UserDTO.Request.Create data) {
         User user = service.create(data);
         log.info("user was created: {}", user);
         return user;
     }
 
     @PutMapping
-    public User update(@Valid @RequestBody NewUserDTO.Request.Update data) {
+    public User update(@Valid @RequestBody UserDTO.Request.Update data) {
         User user = service.update(data);
         log.info("user was updated: {}", user);
         return user;
@@ -46,7 +46,7 @@ public class UserController {
 
     @PatchMapping("/{id}")
     public User updatePartially(@PathVariable Integer id,
-                                @Valid @RequestBody NewUserDTO.Request.UpdatePartially data) {
+                                @Valid @RequestBody UserDTO.Request.UpdatePartially data) {
         User user = service.updatePartially(id, data);
         log.info("user was updated: {}", user);
         return user;

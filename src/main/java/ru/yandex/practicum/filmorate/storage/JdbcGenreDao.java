@@ -5,9 +5,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.storage.interfaces.AbstractJdbcDao;
 
 @Repository
-public class JdbcGenreDao extends JdbcEntityDao<Genre> {
+public class JdbcGenreDao extends AbstractJdbcDao<Genre> {
     @Autowired
     public JdbcGenreDao(JdbcTemplate jdbcTemplate, RowMapper<Genre> rowMapper) {
         super(jdbcTemplate, "genres", rowMapper);

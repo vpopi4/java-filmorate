@@ -10,7 +10,7 @@ import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.interfaces.FilmDao;
+import ru.yandex.practicum.filmorate.storage.interfaces.Dao;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
 
 import java.time.Duration;
@@ -22,7 +22,7 @@ import java.util.List;
 public class FilmService {
     private final IdGenerator idGenerator;
     private final UserService userService;
-    private final FilmDao storage;
+    private final Dao<Film> storage;
 
     public List<Film> getAll() {
         return storage.getAll();
@@ -36,7 +36,7 @@ public class FilmService {
                 ));
     }
 
-    public Film create(FilmDTO dto) throws AlreadyExistException {
+    public Film create(NewFilmDTO.Request.Create dto) throws AlreadyExistException {
         Integer id = idGenerator.getNextId();
         Film film = Film.builder()
                 .id(id)
@@ -44,9 +44,12 @@ public class FilmService {
                 .description(dto.getDescription())
                 .releaseDate(dto.getReleaseDate())
                 .duration(Duration.ofMinutes(dto.getDuration()))
+                .genres(dto.getGenres())
                 .build();
 
-        return storage.create(film);
+        storage.create(film);
+
+        return getById(id);
     }
 
     public Film update(FilmDTO.WithId dto) throws NotFoundException {
@@ -58,7 +61,9 @@ public class FilmService {
                 .duration(Duration.ofMinutes(dto.getDuration()))
                 .build();
 
-        return storage.update(film);
+        storage.update(film);
+
+        return getById(dto.getId());
     }
 
     public Film updatePartially(Integer id, FilmPatchDTO dto) throws NotFoundException {
@@ -86,7 +91,9 @@ public class FilmService {
 
         Film film = builder.build();
 
-        return storage.update(film);
+        storage.update(film);
+
+        return getById(id);
     }
 
     public void delete(Integer id) {
@@ -99,7 +106,9 @@ public class FilmService {
 
         film.getLikesUserId().add(user.getId());
 
-        return storage.update(film);
+        storage.update(film);
+
+        return getById(filmId);
     }
 
     public Film deleteLike(Integer filmId, Integer userId) {
@@ -108,7 +117,7 @@ public class FilmService {
 
         film.getLikesUserId().remove(user.getId());
 
-        return storage.update(film);
+        return getById(filmId);
     }
 
     public List<Film> getPopularFilms(Integer count) {
