@@ -15,11 +15,7 @@ public interface FriendshipDao {
 
     Friendship update(Friendship entity) throws NotFoundException, DataAccessException;
 
-    Set<Integer> getUserFriendsId(Integer userId) throws DataAccessException;
-
     Set<User> getUserFriends(Integer userId) throws DataAccessException;
-
-    List<Friendship> getManyByIds(Integer userId1, Integer userId2) throws DataAccessException;
 
     Optional<Friendship> getByIds(Integer userId, Integer friendId) throws DataAccessException;
 

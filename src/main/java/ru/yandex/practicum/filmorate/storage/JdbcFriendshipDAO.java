@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaces.FriendshipDao;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -63,34 +62,9 @@ public class JdbcFriendshipDao implements FriendshipDao {
     }
 
     @Override
-    public Set<Integer> getUserFriendsId(Integer userId) {
-        return new HashSet<>(jdbcTemplate.queryForList(
-                GET_USER_FRIENDS_ID_QUERY,
-                Integer.class,
-                userId
-        ));
-    }
-
-    @Override
     public Set<User> getUserFriends(Integer userId) throws DataAccessException {
         String sql = "SELECT * FROM users WHERE id IN (%s)".formatted(GET_USER_FRIENDS_ID_QUERY);
         return new HashSet<>(jdbcTemplate.query(sql, userMapper, userId));
-    }
-
-    @Override
-    public List<Friendship> getManyByIds(Integer userId1, Integer userId2) throws DataAccessException {
-        String sql = """
-                SELECT * FROM friendships
-                WHERE
-                    (user_id_to = ? AND user_id_from = ?)
-                OR
-                    (user_id_to = ? AND user_id_from = ?);
-                """;
-
-        return jdbcTemplate.query(sql, mapper,
-                userId1, userId2,
-                userId2, userId1
-        );
     }
 
     @Override
