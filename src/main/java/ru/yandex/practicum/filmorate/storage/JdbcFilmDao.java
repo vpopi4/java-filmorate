@@ -52,9 +52,7 @@ public class JdbcFilmDao extends AbstractJdbcDao<Film> {
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration().toMinutes(),
-                film.getRating() == null
-                        ? null
-                        : film.getRating().getId()
+                film.getMpaRatingId()
         };
     }
 
@@ -65,9 +63,7 @@ public class JdbcFilmDao extends AbstractJdbcDao<Film> {
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration().toMinutes(),
-                film.getRating() == null
-                        ? null
-                        : film.getRating().getId(),
+                film.getMpaRatingId(),
                 film.getId()
         };
     }

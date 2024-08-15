@@ -27,7 +27,7 @@ import java.util.function.Supplier;
 public class UserService {
     private final UserDao storage;
     private final FriendshipDao friendshipStorage;
-    private final IdGenerator idGenerator;
+    private final IdGenerator userIdGenerator;
 
     public List<User> getAll() throws DataAccessException {
         return storage.getAll();
@@ -45,7 +45,7 @@ public class UserService {
         }
 
         Supplier<User> createAndReturnUser = () -> {
-            Integer id = idGenerator.getNextId();
+            Integer id = userIdGenerator.getNextId();
             User user = UserDtoMapper.map(dto, id);
 
             storage.create(user);

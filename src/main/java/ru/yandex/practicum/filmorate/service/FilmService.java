@@ -9,6 +9,8 @@ import ru.yandex.practicum.filmorate.dto.NewFilmDTO;
 import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaces.Dao;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
@@ -20,9 +22,11 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class FilmService {
-    private final IdGenerator idGenerator;
+    private final IdGenerator filmIdGenerator;
     private final UserService userService;
     private final Dao<Film> storage;
+    private final Dao<MpaRating> mpaRatingStorage;
+    private final Dao<Genre> genreStorage;
 
     public List<Film> getAll() {
         return storage.getAll();
@@ -37,7 +41,7 @@ public class FilmService {
     }
 
     public Film create(NewFilmDTO.Request.Create dto) throws AlreadyExistException {
-        Integer id = idGenerator.getNextId();
+        Integer id = filmIdGenerator.getNextId();
         Film film = Film.builder()
                 .id(id)
                 .name(dto.getName())
