@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.FilmDTO;
 import ru.yandex.practicum.filmorate.dto.FilmPatchDTO;
@@ -18,17 +18,11 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class FilmService {
     private final IdGenerator idGenerator;
     private final UserService userService;
     private final FilmDao storage;
-
-    @Autowired
-    public FilmService(UserService userService, FilmDao storage) {
-        this.userService = userService;
-        this.storage = storage;
-        this.idGenerator = new IdGenerator(storage.getMaxId());
-    }
 
     public List<Film> getAll() {
         return storage.getAll();

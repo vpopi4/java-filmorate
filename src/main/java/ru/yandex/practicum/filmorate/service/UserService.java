@@ -1,13 +1,15 @@
 package ru.yandex.practicum.filmorate.service;
 
 import io.micrometer.common.util.StringUtils;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.NewUserDTO;
 import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.UserDtoMapper;
 import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.interfaces.FriendshipDao;
@@ -17,20 +19,15 @@ import ru.yandex.practicum.filmorate.util.IdGenerator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserService {
     private final UserDao storage;
     private final FriendshipDao friendshipStorage;
     private final IdGenerator idGenerator;
-
-    @Autowired
-    public UserService(UserDao storage, FriendshipDao friendshipStorage) {
-        this.storage = storage;
-        this.friendshipStorage = friendshipStorage;
-        this.idGenerator = new IdGenerator(storage.getMaxId());
-    }
 
     public List<User> getAll() throws DataAccessException {
         return storage.getAll();
@@ -42,47 +39,69 @@ public class UserService {
     }
 
     public User create(NewUserDTO.Request.Create dto) throws AlreadyExistException, DataAccessException {
-        User user = User.builder()
-                .id(idGenerator.getNextId())
-                .email(dto.getEmail())
-                .login(dto.getLogin())
-                .name(dto.getName() != null
-                        ? dto.getName()
-                        : dto.getLogin())
-                .birthday(dto.getBirthday())
-                .build();
+        if (storage.getByEmail(dto.getEmail()).isPresent()
+                || storage.getByLogin(dto.getLogin()).isPresent()) {
+            throw new AlreadyExistException("User with such email or login already exist");
+        }
 
-        return storage.create(user);
+        Supplier<User> createAndReturnUser = () -> {
+            Integer id = idGenerator.getNextId();
+            User user = UserDtoMapper.map(dto, id);
+
+            storage.create(user);
+
+            return getById(user.getId());
+        };
+
+        try {
+            return createAndReturnUser.get();
+        } catch (DuplicateKeyException e) {
+            return createAndReturnUser.get(); // second attempt
+        }
     }
 
     public User update(NewUserDTO.Request.Update dto)
             throws NotFoundException, AlreadyExistException, DataAccessException {
-        User user = User.builder()
-                .id(dto.getId())
-                .email(dto.getEmail())
-                .login(dto.getLogin())
-                .name(dto.getName() != null
-                        ? dto.getName()
-                        : dto.getLogin())
-                .birthday(dto.getBirthday())
-                .build();
+        if (storage.getByEmail(dto.getEmail()).isPresent()
+                || storage.getByLogin(dto.getLogin()).isPresent()) {
+            throw new AlreadyExistException("User with such email or login already exist");
+        }
 
-        return storage.update(user);
+        User user = UserDtoMapper.map(dto);
+
+        storage.update(user);
+
+        return getById(user.getId());
     }
 
     public User updatePartially(
             Integer id,
             NewUserDTO.Request.UpdatePartially dto
     ) throws NotFoundException, DataAccessException {
+        if (storage.getByEmail(dto.getEmail()).isPresent()
+                || storage.getByLogin(dto.getLogin()).isPresent()) {
+            throw new AlreadyExistException("User with such email or login already exist");
+        }
+
         User.UserBuilder builder = getById(id).toBuilder();
 
         if (dto.getEmail() != null) {
             log.debug("updating user.email");
+
+            if (storage.getByEmail(dto.getEmail()).isPresent()) {
+                throw new AlreadyExistException("User with such email already exist");
+            }
+
             builder.email(dto.getEmail());
         }
 
         if (dto.getLogin() != null) {
             log.debug("updating user.login");
+
+            if (storage.getByLogin(dto.getLogin()).isPresent()) {
+                throw new AlreadyExistException("User with such login already exist");
+            }
+
             builder.login(dto.getLogin());
         }
 
@@ -98,7 +117,9 @@ public class UserService {
 
         User user = builder.build();
 
-        return storage.update(user);
+        storage.update(user);
+
+        return getById(user.getId());
     }
 
     public void delete(Integer id) {
