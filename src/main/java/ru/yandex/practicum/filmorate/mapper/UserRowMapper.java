@@ -23,7 +23,6 @@ public class UserRowMapper implements RowMapper<User> {
                 .name(rs.getString("name"))
                 .birthday(birthday != null ? birthday.toLocalDate() : null)
                 .createdAt(createdAt != null ? createdAt.toInstant() : null)
-                .friendsId(null)
                 .build();
     }
 }

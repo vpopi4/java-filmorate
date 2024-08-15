@@ -6,7 +6,6 @@ import lombok.Value;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Set;
 
 @Value
 @Builder(toBuilder = true)
@@ -17,5 +16,4 @@ public class User {
     String name;
     LocalDate birthday;
     Instant createdAt;
-    Set<Integer> friendsId;
 }
