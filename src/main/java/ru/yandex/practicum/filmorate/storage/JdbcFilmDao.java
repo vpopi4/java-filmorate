@@ -16,6 +16,25 @@ import java.util.Set;
 
 @Repository
 public class JdbcFilmDao extends AbstractJdbcDao<Film> {
+    private static final String GET_FILMS_WITH_MPA_QUERY = """
+            SELECT
+                films.*,
+                mr.id AS rating_id,
+                mr.name AS rating_name,
+                mr.description AS rating_description,
+                fl_count.likes_count AS likes_count
+            FROM films
+            LEFT OUTER JOIN mpa_ratings AS mr
+            ON mr.id = mpa_rating_id
+            LEFT OUTER JOIN (
+                SELECT
+                    fl.film_id AS film_id,
+                    COUNT(*) AS likes_count
+                FROM film_likes AS fl
+                GROUP BY fl.film_id
+            ) AS fl_count
+            ON fl_count.film_id = films.id
+            """;
     private final RowMapper<Genre> genreRowMapper;
 
     @Autowired
@@ -27,32 +46,12 @@ public class JdbcFilmDao extends AbstractJdbcDao<Film> {
 
     @Override
     public List<Film> getAll() throws DataAccessException {
-        String sql = """
-                SELECT
-                    films.*,
-                    mr.id AS rating_id,
-                    mr.name AS rating_name,
-                    mr.description AS rating_description
-                FROM films
-                LEFT OUTER JOIN mpa_ratings AS mr
-                ON mr.id = mpa_rating_id;
-                """;
-        return jdbcTemplate.query(sql, rowMapper);
+        return jdbcTemplate.query(GET_FILMS_WITH_MPA_QUERY, rowMapper);
     }
 
     @Override
     public Optional<Film> getById(Integer id) throws DataAccessException {
-        String sql = """
-                SELECT
-                    films.*,
-                    mr.id AS rating_id,
-                    mr.name AS rating_name,
-                    mr.description AS rating_description
-                FROM films
-                LEFT OUTER JOIN mpa_ratings AS mr
-                ON mr.id = mpa_rating_id
-                WHERE films.id = ?;
-                """;
+        String sql = GET_FILMS_WITH_MPA_QUERY + " WHERE films.id = ?";
         return jdbcTemplate.query(sql, rowMapper, id).stream().findFirst();
     }
 
@@ -95,6 +94,12 @@ public class JdbcFilmDao extends AbstractJdbcDao<Film> {
     public void deleteLike(Integer filmId, Integer userId) {
         String sql = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
         jdbcTemplate.update(sql, filmId, userId);
+    }
+
+    public List<Film> getPopular(Integer limit) {
+        String sql = GET_FILMS_WITH_MPA_QUERY + "ORDER BY likes_count DESC LIMIT ?";
+
+        return jdbcTemplate.query(sql, rowMapper, limit);
     }
 
     @Override

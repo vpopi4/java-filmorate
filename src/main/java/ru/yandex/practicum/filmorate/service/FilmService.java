@@ -161,14 +161,6 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilms(Integer count) {
-        // TODO: optimize by sql query
-        return getAll()
-                .stream()
-                .sorted((f1, f2) -> Integer.compare(
-                        f2.getLikesUserId().size(),
-                        f1.getLikesUserId().size()
-                ))
-                .limit(count)
-                .toList();
+        return storage.getPopular(count);
     }
 }

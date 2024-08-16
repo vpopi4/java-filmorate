@@ -24,4 +24,5 @@ public class Film {
     MpaRating mpa;
     List<Genre> genres;
     Set<Integer> likesUserId;
+    Integer likesCount;
 }
