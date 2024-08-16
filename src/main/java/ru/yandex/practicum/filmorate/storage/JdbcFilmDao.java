@@ -87,12 +87,12 @@ public class JdbcFilmDao extends AbstractJdbcDao<Film> {
                 });
     }
 
-    public void putLike(Integer filmId, Integer userId){
+    public void putLike(Integer filmId, Integer userId) {
         String sql = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
         jdbcTemplate.update(sql, filmId, userId);
     }
 
-    public void deleteLike(Integer filmId, Integer userId){
+    public void deleteLike(Integer filmId, Integer userId) {
         String sql = "DELETE FROM film_likes WHERE film_id = ? AND user_id = ?";
         jdbcTemplate.update(sql, filmId, userId);
     }
