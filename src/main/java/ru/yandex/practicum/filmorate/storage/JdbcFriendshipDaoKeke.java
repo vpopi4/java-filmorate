@@ -17,7 +17,7 @@ import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
-public class JdbcFriendshipDao implements FriendshipDao {
+public class JdbcFriendshipDaoKeke implements FriendshipDao {
     public static final String GET_USER_FRIENDS_ID_QUERY = """
             SELECT user_id_to AS friend_id
             FROM friendships
