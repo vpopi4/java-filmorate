@@ -87,22 +87,22 @@ public class UserController {
     }
 
     @PutMapping("/{userId}/friends/{friendId}")
-    public void createFriendRequest(@PathVariable Integer userId,
-                                    @PathVariable Integer friendId) {
+    public void sendFriendRequest(@PathVariable Integer userId,
+                                  @PathVariable Integer friendId) {
         log.debug("handle PUT /users/{userId}/friends/{friendId}");
         log.debug("userId={}, friendId={}", userId, friendId);
 
-        service.createFriendRequest(userId, friendId);
+        service.sendFriendRequest(userId, friendId);
         log.debug("friend request was created");
     }
 
     @DeleteMapping("/{userId}/friends/{friendId}")
-    public void deleteFriendRequest(@PathVariable Integer userId,
+    public void revokeFriendRequest(@PathVariable Integer userId,
                                     @PathVariable Integer friendId) {
         log.debug("handle DELETE /users/{userId}/friends/{friendId}");
         log.debug("userId={}, friendId={}", userId, friendId);
 
-        service.deleteFriendRequest(userId, friendId);
+        service.revokeFriendRequest(userId, friendId);
         log.debug("friend request was deleted");
     }
 }

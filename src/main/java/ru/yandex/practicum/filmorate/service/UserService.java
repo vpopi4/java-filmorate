@@ -126,7 +126,7 @@ public class UserService {
         storage.delete(id);
     }
 
-    public void createFriendRequest(Integer userId, Integer friendId) throws NotFoundException, AlreadyExistException {
+    public void sendFriendRequest(Integer userId, Integer friendId) throws NotFoundException, AlreadyExistException {
         getById(userId);
         getById(friendId);
 
@@ -150,7 +150,7 @@ public class UserService {
         }
     }
 
-    public void deleteFriendRequest(Integer userId, Integer friendId) throws NotFoundException {
+    public void revokeFriendRequest(Integer userId, Integer friendId) throws NotFoundException {
         getById(userId);
         getById(friendId);
 
