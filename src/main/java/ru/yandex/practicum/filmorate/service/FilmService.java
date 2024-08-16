@@ -3,9 +3,9 @@ package ru.yandex.practicum.filmorate.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.FilmDTO;
 import ru.yandex.practicum.filmorate.dto.GenreDTO;
 import ru.yandex.practicum.filmorate.dto.MpaRatingDTO;
-import ru.yandex.practicum.filmorate.dto.FilmDTO;
 import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
 import ru.yandex.practicum.filmorate.exception.BadRequestException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -20,7 +20,9 @@ import ru.yandex.practicum.filmorate.util.IdGenerator;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -57,11 +59,8 @@ public class FilmService {
 
     public Film create(FilmDTO.Request.Create dto) throws AlreadyExistException {
         Integer id = filmIdGenerator.getNextId();
-        List<Genre> genres = findGenres(dto.getGenres());
 
-        if (genres.size() != dto.getGenres().size()) {
-            throw new BadRequestException("Such genres does not exist");
-        }
+        List<Genre> genres = findGenres(dto.getGenres());
 
         Film film = FilmDtoMapper.map(
                 dto,
@@ -99,12 +98,14 @@ public class FilmService {
             return Collections.emptyList();
         }
 
-        return genreStorage.getManyById(
-                genresIds
-                        .stream()
-                        .map(g -> g.id())
-                        .collect(Collectors.toList())
-        );
+        Set<GenreDTO> uniqueGenres = new HashSet<>(genresIds);
+
+        return uniqueGenres.stream()
+                .map(g -> genreStorage
+                        .getById(g.id())
+                        .orElseThrow(() -> new BadRequestException("Such genre[id" + g.id() + "] does not exist"))
+                )
+                .collect(Collectors.toList());
     }
 
     public Film updatePartially(Integer id, FilmDTO.Request.UpdatePartially dto) throws NotFoundException {

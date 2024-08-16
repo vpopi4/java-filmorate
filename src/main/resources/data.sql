@@ -15,12 +15,12 @@ WHEN NOT MATCHED THEN
 
 MERGE INTO genres AS target
 USING (VALUES
-    (1, 'Comedy'),
-    (2, 'Drama'),
-    (3, 'Animation'),
-    (4, 'Thriller'),
-    (5, 'Documentary'),
-    (6, 'Action')
+    (1, 'Комедия'),
+    (2, 'Драма'),
+    (3, 'Мультфильм'),
+    (4, 'Триллер'),
+    (5, 'Документальный'),
+    (6, 'Боевик')
 ) AS source (id, name)
 ON target.id = source.id
 WHEN MATCHED THEN
