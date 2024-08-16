@@ -12,9 +12,9 @@ import ru.yandex.practicum.filmorate.storage.interfaces.UserDao;
 import java.util.Optional;
 
 @Repository
-public class JdbcUserDaoKeke extends AbstractJdbcDao<User> implements UserDao {
+public class JdbcUserDao extends AbstractJdbcDao<User> implements UserDao {
     @Autowired
-    public JdbcUserDaoKeke(JdbcTemplate jdbcTemplate, RowMapper<User> rowMapper) {
+    public JdbcUserDao(JdbcTemplate jdbcTemplate, RowMapper<User> rowMapper) {
         super(jdbcTemplate, "users", rowMapper);
     }
 
