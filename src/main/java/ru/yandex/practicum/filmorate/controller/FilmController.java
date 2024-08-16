@@ -6,8 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDTO;
-import ru.yandex.practicum.filmorate.dto.FilmPatchDTO;
-import ru.yandex.practicum.filmorate.dto.NewFilmDTO;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
@@ -37,7 +35,7 @@ public class FilmController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film create(@Valid @RequestBody NewFilmDTO.Request.Create dto) {
+    public Film create(@Valid @RequestBody FilmDTO.Request.Create dto) {
         log.debug("handle POST /films");
         log.debug("request body={}", dto);
 
@@ -48,7 +46,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@Valid @RequestBody FilmDTO.WithId dto) {
+    public Film update(@Valid @RequestBody FilmDTO.Request.Update dto) {
         log.debug("handle PUT /films");
         log.debug("request body={}", dto);
 
@@ -60,7 +58,7 @@ public class FilmController {
 
     @PatchMapping("/{id}")
     public Film updatePartially(@PathVariable Integer id,
-                                @Valid @RequestBody FilmPatchDTO dto) {
+                                @Valid @RequestBody FilmDTO.Request.UpdatePartially dto) {
         log.debug("handle PATCH /films/{id}");
         log.debug("id={}, request body={}", id, dto);
 
