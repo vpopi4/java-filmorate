@@ -3,65 +3,105 @@ package ru.yandex.practicum.filmorate.service;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.UserDTO;
-import ru.yandex.practicum.filmorate.dto.UserPatchDTO;
-import ru.yandex.practicum.filmorate.exceptions.AlreadyExistException;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.UserDtoMapper;
+import ru.yandex.practicum.filmorate.model.Friendship;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.EntityStorage;
+import ru.yandex.practicum.filmorate.storage.interfaces.FriendshipDao;
+import ru.yandex.practicum.filmorate.storage.interfaces.UserDao;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
-import ru.yandex.practicum.filmorate.util.UserMapper;
 
-import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Supplier;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class UserService {
-    private final EntityStorage<User> storage;
-    private final IdGenerator idGenerator;
+    private final UserDao storage;
+    private final FriendshipDao friendshipStorage;
+    private final IdGenerator userIdGenerator;
 
-    public List<User> getAll() {
+    public List<User> getAll() throws DataAccessException {
         return storage.getAll();
     }
 
-    public User getById(Integer id) throws NotFoundException {
-        return storage
-                .getById(id)
-                .orElseThrow(() -> new NotFoundException(
-                        "User[id=" + id + "] not found"
-                ));
+    public User getById(Integer id) throws NotFoundException, DataAccessException {
+        return storage.getById(id)
+                .orElseThrow(() -> new NotFoundException("User[id=" + id + "] not found"));
     }
 
-    public User create(UserDTO dto) throws AlreadyExistException {
-        Integer id = idGenerator.getNextId();
-        HashSet<Integer> friends = new HashSet<>();
-        User user = checkNameField(UserMapper.map(dto, id, friends));
+    public User create(UserDTO.Request.Create dto) throws AlreadyExistException, DataAccessException {
+        if (storage.getByEmail(dto.getEmail()).isPresent()
+                || storage.getByLogin(dto.getLogin()).isPresent()) {
+            throw new AlreadyExistException("User with such email or login already exist");
+        }
 
-        return storage.create(id, user);
+        Supplier<User> createAndReturnUser = () -> {
+            Integer id = userIdGenerator.getNextId();
+            User user = UserDtoMapper.map(dto, id);
+
+            storage.create(user);
+
+            return getById(user.getId());
+        };
+
+        try {
+            return createAndReturnUser.get();
+        } catch (DuplicateKeyException e) {
+            return createAndReturnUser.get(); // second attempt
+        }
     }
 
-    public User update(UserDTO.WithId dto) throws NotFoundException {
-        HashSet<Integer> friends = new HashSet<>();
-        User user = checkNameField(UserMapper.map(dto, friends));
+    public User update(UserDTO.Request.Update dto)
+            throws NotFoundException, AlreadyExistException, DataAccessException {
+        if (storage.getByEmail(dto.getEmail()).isPresent()
+                || storage.getByLogin(dto.getLogin()).isPresent()) {
+            throw new AlreadyExistException("User with such email or login already exist");
+        }
 
-        return storage.update(user.getId(), user);
+        User user = UserDtoMapper.map(dto);
+
+        storage.update(user);
+
+        return getById(user.getId());
     }
 
-    public User updatePartially(Integer id, UserPatchDTO dto) throws NotFoundException {
+    public User updatePartially(
+            Integer id,
+            UserDTO.Request.UpdatePartially dto
+    ) throws NotFoundException, DataAccessException {
+        if (storage.getByEmail(dto.getEmail()).isPresent()
+                || storage.getByLogin(dto.getLogin()).isPresent()) {
+            throw new AlreadyExistException("User with such email or login already exist");
+        }
+
         User.UserBuilder builder = getById(id).toBuilder();
 
         if (dto.getEmail() != null) {
             log.debug("updating user.email");
+
+            if (storage.getByEmail(dto.getEmail()).isPresent()) {
+                throw new AlreadyExistException("User with such email already exist");
+            }
+
             builder.email(dto.getEmail());
         }
 
         if (dto.getLogin() != null) {
             log.debug("updating user.login");
+
+            if (storage.getByLogin(dto.getLogin()).isPresent()) {
+                throw new AlreadyExistException("User with such login already exist");
+            }
+
             builder.login(dto.getLogin());
         }
 
@@ -77,42 +117,55 @@ public class UserService {
 
         User user = builder.build();
 
-        return storage.put(id, user);
+        storage.update(user);
+
+        return getById(user.getId());
     }
 
     public void delete(Integer id) {
-        // TODO: check data safety (films, friends)
-        storage.remove(id);
+        storage.delete(id);
     }
 
-    public void createFriendship(Integer userId, Integer friendId) throws NotFoundException {
-        User user = getById(userId);
-        User friend = getById(friendId);
+    public void sendFriendRequest(Integer userId, Integer friendId) throws NotFoundException, AlreadyExistException {
+        getById(userId);
+        getById(friendId);
 
-        user.getFriends().add(friend.getId());
-        friend.getFriends().add(user.getId());
+        Optional<Friendship> friendRequest = friendshipStorage.getByIds(userId, friendId);
 
-        storage.update(userId, user);
-        storage.update(friendId, friend);
+        if (friendRequest.isPresent()) {
+            throw new AlreadyExistException("friend request already sent");
+        }
+
+        Friendship.FriendshipBuilder requestBuilder = Friendship.builder()
+                .userIdFrom(userId)
+                .userIdTo(friendId);
+
+        Optional<Friendship> friendRequestReverse = friendshipStorage.getByIds(friendId, userId);
+
+        if (friendRequestReverse.isPresent()) {
+            friendshipStorage.create(requestBuilder.isAccepted(true).build());
+            friendshipStorage.update(friendRequestReverse.get().toBuilder().isAccepted(true).build());
+        } else {
+            friendshipStorage.create(requestBuilder.isAccepted(false).build());
+        }
     }
 
-    public void deleteFriendship(Integer userId, Integer friendId) throws NotFoundException {
-        User user = getById(userId);
-        User friend = getById(friendId);
+    public void revokeFriendRequest(Integer userId, Integer friendId) throws NotFoundException {
+        getById(userId);
+        getById(friendId);
 
-        user.getFriends().remove(friend.getId());
-        friend.getFriends().remove(user.getId());
+        friendshipStorage.delete(userId, friendId);
 
-        storage.update(userId, user);
-        storage.update(friendId, friend);
+        Optional<Friendship> reverseRequest = friendshipStorage.getByIds(userId, friendId);
+
+        if (reverseRequest.isPresent()) {
+            friendshipStorage.update(reverseRequest.get().toBuilder().isAccepted(false).build());
+        }
     }
 
     public Set<User> getFriends(Integer id) {
-        return getById(id)
-                .getFriends()
-                .stream()
-                .map(this::getById)
-                .collect(Collectors.toSet());
+        getById(id);
+        return friendshipStorage.getUserFriends(id);
     }
 
     public Set<User> getCommonFriends(Integer userId1, Integer userId2) throws NotFoundException {
@@ -122,16 +175,5 @@ public class UserService {
         user1Friends.retainAll(user2Friends);
 
         return user1Friends;
-    }
-
-    private User checkNameField(User user) {
-        if (StringUtils.isBlank(user.getName())) {
-            log.trace("name is blank, so login={} will be name", user.getName());
-            return user
-                    .toBuilder()
-                    .name(user.getLogin())
-                    .build();
-        }
-        return user;
     }
 }

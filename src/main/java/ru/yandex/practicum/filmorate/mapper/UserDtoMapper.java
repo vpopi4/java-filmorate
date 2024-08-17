@@ -1,30 +1,30 @@
-package ru.yandex.practicum.filmorate.util;
+package ru.yandex.practicum.filmorate.mapper;
 
 import ru.yandex.practicum.filmorate.dto.UserDTO;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Set;
-
-public class UserMapper {
-    public static User map(UserDTO dto, Integer id, Set<Integer> friends) {
+public class UserDtoMapper {
+    public static User map(UserDTO.Request.Create dto, Integer id) {
         return User.builder()
                 .id(id)
                 .email(dto.getEmail())
                 .login(dto.getLogin())
-                .name(dto.getName())
+                .name(dto.getName() != null
+                        ? dto.getName()
+                        : dto.getLogin())
                 .birthday(dto.getBirthday())
-                .friends(friends)
                 .build();
     }
 
-    public static User map(UserDTO.WithId dto, Set<Integer> friends) {
+    public static User map(UserDTO.Request.Update dto) {
         return User.builder()
                 .id(dto.getId())
                 .email(dto.getEmail())
                 .login(dto.getLogin())
-                .name(dto.getName())
+                .name(dto.getName() != null
+                        ? dto.getName()
+                        : dto.getLogin())
                 .birthday(dto.getBirthday())
-                .friends(friends)
                 .build();
     }
 }

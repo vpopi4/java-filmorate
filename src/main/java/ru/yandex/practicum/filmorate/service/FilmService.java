@@ -4,29 +4,45 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.FilmDTO;
-import ru.yandex.practicum.filmorate.dto.FilmPatchDTO;
-import ru.yandex.practicum.filmorate.exceptions.AlreadyExistException;
-import ru.yandex.practicum.filmorate.exceptions.NotFoundException;
+import ru.yandex.practicum.filmorate.dto.GenreDTO;
+import ru.yandex.practicum.filmorate.dto.MpaRatingDTO;
+import ru.yandex.practicum.filmorate.exception.AlreadyExistException;
+import ru.yandex.practicum.filmorate.exception.BadRequestException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.FilmDtoMapper;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.EntityStorage;
-import ru.yandex.practicum.filmorate.util.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MpaRating;
+import ru.yandex.practicum.filmorate.storage.JdbcFilmDao;
+import ru.yandex.practicum.filmorate.storage.JdbcGenreDao;
+import ru.yandex.practicum.filmorate.storage.interfaces.Dao;
 import ru.yandex.practicum.filmorate.util.IdGenerator;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class FilmService {
+    private final IdGenerator filmIdGenerator;
     private final UserService userService;
-    private final EntityStorage<Film> storage;
-    private final IdGenerator idGenerator;
+    private final JdbcFilmDao storage;
+    private final Dao<MpaRating> mpaRatingStorage;
+    private final JdbcGenreDao genreStorage;
 
     public List<Film> getAll() {
-        return storage.getAll();
+        // TODO: optimize getting genres and likes
+        return storage.getAll().stream()
+                .map(film -> film.toBuilder()
+                        .genres(storage.getGenres(film.getId()))
+                        .likesUserId(storage.getLikesUserId(film.getId()))
+                        .build())
+                .collect(Collectors.toList());
     }
 
     public Film getById(Integer id) throws NotFoundException {
@@ -34,25 +50,65 @@ public class FilmService {
                 .getById(id)
                 .orElseThrow(() -> new NotFoundException(
                         "Film[id=" + id + "] not found"
-                ));
+                ))
+                .toBuilder()
+                .genres(storage.getGenres(id))
+                .likesUserId(storage.getLikesUserId(id))
+                .build();
     }
 
-    public Film create(FilmDTO dto) throws AlreadyExistException {
-        Integer id = idGenerator.getNextId();
-        HashSet<Integer> likes = new HashSet<>();
-        Film film = FilmMapper.map(dto, id, likes);
+    public Film create(FilmDTO.Request.Create dto) throws AlreadyExistException {
+        Integer id = filmIdGenerator.getNextId();
 
-        return storage.create(id, film);
+        List<Genre> genres = findGenres(dto.getGenres());
+
+        Film film = FilmDtoMapper.map(
+                dto,
+                id,
+                findMpaRating(dto.getMpa()),
+                genres
+        );
+
+        storage.create(film);
+        storage.setGenres(film.getId(), film.getGenres());
+
+        return getById(id);
     }
 
-    public Film update(FilmDTO.WithId dto) throws NotFoundException {
-        HashSet<Integer> likes = new HashSet<>();
-        Film film = FilmMapper.map(dto, likes);
+    public Film update(FilmDTO.Request.Update dto) throws NotFoundException {
+        Film film = FilmDtoMapper.map(
+                dto,
+                findMpaRating(dto.getMpa()),
+                findGenres(dto.getGenres())
+        );
 
-        return storage.update(film.getId(), film);
+        storage.update(film);
+        storage.setGenres(film.getId(), film.getGenres());
+
+        return getById(dto.getId());
     }
 
-    public Film updatePartially(Integer id, FilmPatchDTO dto) throws NotFoundException {
+    private MpaRating findMpaRating(MpaRatingDTO mpa) {
+        return mpaRatingStorage.getById(mpa.id())
+                .orElseThrow(() -> new BadRequestException("mpa rating not found"));
+    }
+
+    private List<Genre> findGenres(List<GenreDTO> genresIds) {
+        if (genresIds == null) {
+            return Collections.emptyList();
+        }
+
+        Set<GenreDTO> uniqueGenres = new HashSet<>(genresIds);
+
+        return uniqueGenres.stream()
+                .map(g -> genreStorage
+                        .getById(g.id())
+                        .orElseThrow(() -> new BadRequestException("Such genre[id" + g.id() + "] does not exist"))
+                )
+                .collect(Collectors.toList());
+    }
+
+    public Film updatePartially(Integer id, FilmDTO.Request.UpdatePartially dto) throws NotFoundException {
         Film.FilmBuilder builder = getById(id).toBuilder();
 
         if (dto.getName() != null) {
@@ -77,40 +133,34 @@ public class FilmService {
 
         Film film = builder.build();
 
-        return storage.put(id, film);
+        storage.update(film);
+
+        return getById(id);
     }
 
     public void delete(Integer id) {
-        // TODO: check data safety (users)
-        storage.remove(id);
+        storage.delete(id);
     }
 
     public Film putLike(Integer filmId, Integer userId) throws NotFoundException {
-        Film film = getById(filmId);
-        User user = userService.getById(userId);
+        storage.getById(filmId).orElseThrow(NotFoundException::new);
+        userService.getById(userId);
 
-        film.getLikesUserId().add(user.getId());
+        storage.putLike(filmId, userId);
 
-        return storage.put(filmId, film);
+        return getById(filmId);
     }
 
     public Film deleteLike(Integer filmId, Integer userId) {
-        Film film = getById(filmId);
-        User user = userService.getById(userId);
+        storage.getById(filmId).orElseThrow(NotFoundException::new);
+        userService.getById(userId);
 
-        film.getLikesUserId().remove(user.getId());
+        storage.deleteLike(filmId, userId);
 
-        return storage.put(filmId, film);
+        return getById(filmId);
     }
 
     public List<Film> getPopularFilms(Integer count) {
-        return getAll()
-                .stream()
-                .sorted((f1, f2) -> Integer.compare(
-                        f2.getLikesUserId().size(),
-                        f1.getLikesUserId().size()
-                ))
-                .limit(count)
-                .toList();
+        return storage.getPopular(count);
     }
 }
